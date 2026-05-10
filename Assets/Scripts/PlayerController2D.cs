@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
+using GlobalEnums;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -8,91 +11,187 @@ public class PlayerController2D : MonoBehaviour
 {
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 7f;
-    [SerializeField] private float acceleration = 70f;
-    [SerializeField] private float deceleration = 80f;
-    [SerializeField] private float airControlMultiplier = 0.6f;
-
-    [Header("Jump")]
     [SerializeField] private float jumpForce = 14f;
-    [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundCheckRadius = 0.15f;
-    [SerializeField] private LayerMask groundLayer;
 
-    private Rigidbody2D rb;
-    private SpriteRenderer spriteRenderer;
-    private float moveInput;
-    private bool isGrounded;
+    [Header("References")]
+    [SerializeField] private Transform attackOrigin;
+
+    [Header("Optional Attack Data")]
+    [SerializeField] private AttackDefinition2D[] groundCombo;
+    [SerializeField] private AttackDefinition2D[] airCombo;
+    [SerializeField] private AttackDefinition2D specialAttack;
+
+    [Header("Debug")]
+    [SerializeField] private bool showRuntimeHitbox;
+
+    [Header("Hero Other")]
+    public HeroControllerStates cState;
+
+    private Rigidbody2D rb2d;
+
+    public ActorStates hero_state;
+    public ActorStates prev_hero_state;
+
+    [SerializeField] private float move_input;
+    private readonly List<DecayingVelocity> extraAirMoveVelocities = new List<DecayingVelocity>();
+
+    // --- Properties ---
+    public bool ShowRuntimeHitbox { get => showRuntimeHitbox; set => showRuntimeHitbox = value; }
+    public int FacingDirection { get; private set; } = 1;
+    public Vector2 AttackOriginPosition => attackOrigin != null ? (Vector2)attackOrigin.position : (Vector2)transform.position;
+    public AttackDefinition2D[] GroundCombo => groundCombo;
+    public AttackDefinition2D[] AirCombo => airCombo;
+    public AttackDefinition2D SpecialAttack => specialAttack;
+    public Rigidbody2D Body => rb2d;
+
+    // -------------------------------------------------------
+    // Unity Messages
+    // -------------------------------------------------------
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        rb.gravityScale = 3.5f;
-        rb.freezeRotation = true;
+        rb2d = GetComponent<Rigidbody2D>();
+        if (cState == null)
+            cState = new HeroControllerStates();
     }
 
     private void Update()
     {
-        moveInput = ReadHorizontalInput();
-
-        if (groundCheck != null)
-        {
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-        }
-
-        if (ReadJumpPressedThisFrame() && isGrounded)
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        }
+        move_input = ReadMoveInput();
+        if (!Mathf.Approximately(move_input, 0f))
+            Move(move_input, true);
     }
 
-    private void FixedUpdate()
+    // -------------------------------------------------------
+    // Movement
+    // -------------------------------------------------------
+
+    private void Move(float moveDirection, bool useInput)
     {
-        float targetSpeed = moveInput * moveSpeed;
-        float speedDifference = targetSpeed - rb.linearVelocity.x;
+        UpdateGroundState();
+        moveDirection = ApplyMovementBlocking(moveDirection);
 
-        float controlMultiplier = isGrounded ? 1f : airControlMultiplier;
-        float currentAccelRate = Mathf.Abs(targetSpeed) > 0.01f ? acceleration : deceleration;
+        Vector2 velocity = rb2d.linearVelocity;
 
-        float movement = speedDifference * currentAccelRate * controlMultiplier * Time.fixedDeltaTime;
-        float newXVelocity = Mathf.Clamp(rb.linearVelocity.x + movement, -moveSpeed, moveSpeed);
+        if (useInput && !cState.wallSliding)
+            velocity.x = moveDirection * GetCurrentSpeed();
 
-        rb.linearVelocity = new Vector2(newXVelocity, rb.linearVelocity.y);
+        velocity = ApplyExtraVelocities(velocity);
+        rb2d.linearVelocity = velocity;
 
-        if (spriteRenderer != null)
-        {
-            if (moveInput > 0.01f)
-            {
-                spriteRenderer.flipX = false;
-            }
-            else if (moveInput < -0.01f)
-            {
-                spriteRenderer.flipX = true;
-            }
-        }
+        if (moveDirection > 0.01f)
+            FacingDirection = 1;
+        else if (moveDirection < -0.01f)
+            FacingDirection = -1;
     }
 
-    private float ReadHorizontalInput()
+    // --- State ---
+
+    private void SetState(ActorStates newState)
+    {
+        prev_hero_state = hero_state;
+        hero_state = newState;
+    }
+
+    // --- Ground ---
+
+    private void UpdateGroundState()
+    {
+        if (cState.onGround)
+            SetState(ActorStates.grounded);
+    }
+
+    // --- Movement Blocking ---
+
+    private float ApplyMovementBlocking(float moveDirection)
+    {
+        if (IsInSpikeRecovery()) return 0f;
+        if (IsBlockedBySlopeLeft(moveDirection)) return 0f;
+        if (IsBlockedBySlopeRight(moveDirection)) return 0f;
+        return moveDirection;
+    }
+
+    private bool IsInSpikeRecovery() => cState.downSpikeRecovery && cState.onGround;
+    private bool IsBlockedBySlopeLeft(float moveDirection) => cState.isTouchingSlopeLeft && moveDirection < 0f;
+    private bool IsBlockedBySlopeRight(float moveDirection) => cState.isTouchingSlopeRight && moveDirection > 0f;
+
+    // --- Speed ---
+
+    private float GetCurrentSpeed()
+    {
+        if (cState.inWalkZone && cState.onGround)
+            return GetWalkSpeed();
+        return GetRunSpeed();
+    }
+
+    private float GetWalkSpeed() => 3f; // TODO: replace with real value
+    private float GetRunSpeed() => moveSpeed;
+
+    // --- Extra Velocities ---
+
+    public void AddExtraAirMoveVelocity(DecayingVelocity velocity)
+    {
+        extraAirMoveVelocities.Add(velocity);
+    }
+
+    private Vector2 ApplyExtraVelocities(Vector2 velocity)
+    {
+        foreach (var dv in extraAirMoveVelocities)
+        {
+            if (!ShouldSkipVelocity(dv))
+                velocity += dv.Velocity;
+        }
+        return velocity;
+    }
+
+    private bool ShouldSkipVelocity(DecayingVelocity dv)
+    {
+        return dv.SkipBehaviour switch
+        {
+            DecayingVelocity.SkipBehaviours.None => false,
+            DecayingVelocity.SkipBehaviours.WhileMoving => IsMoving(),
+            DecayingVelocity.SkipBehaviours.WhileMovingForward => IsMovingForward(),
+            DecayingVelocity.SkipBehaviours.WhileMovingBackward => IsMovingBackward(),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    private bool IsMoving() => Math.Abs(move_input) > Mathf.Epsilon;
+    private bool IsMovingForward() => cState.facingRight ? move_input > Mathf.Epsilon : move_input < Mathf.Epsilon;
+    private bool IsMovingBackward() => cState.facingRight ? move_input < Mathf.Epsilon : move_input > Mathf.Epsilon;
+
+    // -------------------------------------------------------
+    // Actions
+    // -------------------------------------------------------
+
+    public void Jump()
+    {
+        if (rb2d == null) return;
+        Vector2 velocity = rb2d.linearVelocity;
+        velocity.y = jumpForce;
+        rb2d.linearVelocity = velocity;
+    }
+
+    public void Attack()
+    {
+        // TODO: implement attack logic
+    }
+
+    // -------------------------------------------------------
+    // Input
+    // -------------------------------------------------------
+
+    private float ReadMoveInput()
     {
 #if ENABLE_INPUT_SYSTEM
         if (Keyboard.current != null)
         {
             float horizontal = 0f;
-
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
-            {
-                horizontal -= 1f;
-            }
-
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
-            {
-                horizontal += 1f;
-            }
-
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontal -= 1f;
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontal += 1f;
             return horizontal;
         }
 #endif
-
 #if ENABLE_LEGACY_INPUT_MANAGER
         return Input.GetAxisRaw("Horizontal");
 #else
@@ -100,30 +199,62 @@ public class PlayerController2D : MonoBehaviour
 #endif
     }
 
-    private bool ReadJumpPressedThisFrame()
-    {
-#if ENABLE_INPUT_SYSTEM
-        if (Keyboard.current != null)
-        {
-            return Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.wKey.wasPressedThisFrame || Keyboard.current.upArrowKey.wasPressedThisFrame;
-        }
-#endif
+    // -------------------------------------------------------
+    // Inner Types
+    // -------------------------------------------------------
 
-#if ENABLE_LEGACY_INPUT_MANAGER
-        return Input.GetButtonDown("Jump");
-#else
-        return false;
-#endif
+    [Serializable]
+    public class HeroControllerStates
+    {
+        public bool facingRight;
+        public bool onGround;
+        public bool wallSliding;
+        public bool inWalkZone;
+        public bool downSpikeRecovery;
+        public bool isTouchingSlopeLeft;
+        public bool isTouchingSlopeRight;
+        public bool invulnerable;
+        public int invulnerableCount;
+
+        private static BoolFieldAccessOptimizer<HeroControllerStates> boolFieldAccessOptimizer;
+
+        public bool Invulnerable => invulnerable || invulnerableCount > 0;
+
+        public HeroControllerStates()
+        {
+            facingRight = false;
+            if (boolFieldAccessOptimizer == null)
+                boolFieldAccessOptimizer = new BoolFieldAccessOptimizer<HeroControllerStates>();
+            Reset();
+        }
+
+        public void Reset()
+        {
+            onGround = false;
+            wallSliding = false;
+            inWalkZone = false;
+            downSpikeRecovery = false;
+            isTouchingSlopeLeft = false;
+            isTouchingSlopeRight = false;
+            invulnerable = false;
+            invulnerableCount = 0;
+        }
     }
 
-    private void OnDrawGizmosSelected()
+    [Serializable]
+    public struct DecayingVelocity
     {
-        if (groundCheck == null)
-        {
-            return;
-        }
+        public Vector2 Velocity;
+        public SkipBehaviours SkipBehaviour;
 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        public enum SkipBehaviours
+        {
+            None,
+            WhileMoving,
+            WhileMovingForward,
+            WhileMovingBackward
+        }
     }
+
+    private class BoolFieldAccessOptimizer<T> { }
 }
