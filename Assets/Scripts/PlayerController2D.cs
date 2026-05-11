@@ -60,6 +60,12 @@ public class PlayerController2D : MonoBehaviour
         move_input = ReadMoveInput();
         if (!Mathf.Approximately(move_input, 0f))
             Move(move_input, true);
+
+        if (ReadJumpInput() && cState.onGround)
+            Jump();
+
+        if (ReadAttackInput())
+            Attack();
     }
 
     // -------------------------------------------------------
@@ -196,6 +202,27 @@ public class PlayerController2D : MonoBehaviour
         return Input.GetAxisRaw("Horizontal");
 #else
         return 0f;
+#endif
+    }
+    private bool ReadAttackInput()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.zKey.wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+    return Input.GetButtonDown("Fire1");
+#else
+    return false;
+#endif
+    }
+ 
+    private bool ReadJumpInput()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+    return Input.GetButtonDown("Jump");
+#else
+    return false;
 #endif
     }
 
