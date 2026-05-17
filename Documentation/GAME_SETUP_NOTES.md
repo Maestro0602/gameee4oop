@@ -2,7 +2,7 @@
 
 ## What was added
 
-### `Assets/Scripts/PlayerController2D.cs`
+### `Assets/Scripts/HeroController.cs`
 Basic 2D platformer controller:
 - Left/right movement
 - Jumping when grounded
@@ -28,7 +28,7 @@ Basic smooth camera follow:
 
 ## How each script works
 
-### `PlayerController2D`
+### `HeroController`
 - `Update()`
   - Reads horizontal input
   - Checks if grounded using `Physics2D.OverlapCircle`
@@ -61,10 +61,10 @@ Basic smooth camera follow:
    - `SpriteRenderer`
    - `Rigidbody2D` (Dynamic)
    - `BoxCollider2D`
-   - `PlayerController2D`
+    - `HeroController`
    - `SimpleShapeSprite`
 3. Create child object `GroundCheck` under player and place at feet.
-4. Assign `GroundCheck` to `groundCheck` in `PlayerController2D`.
+4. Assign `GroundCheck` to `groundCheck` in `HeroController`.
 5. Create ground object(s) with `BoxCollider2D`.
 6. Put ground on a `Ground` layer and assign that layer in `groundLayer`.
 7. Add `CameraFollow2D` to `Main Camera` and assign `Player` as target.
@@ -74,7 +74,7 @@ Basic smooth camera follow:
 ## Notes
 
 - If movement input does not work, check **Project Settings > Player > Active Input Handling**.
-- `PlayerController2D` currently supports both input systems at compile time.
+- `HeroController` currently supports both input systems at compile time.
 - Keep `Main Camera` offset `z = -10` for 2D rendering.
 
 ---

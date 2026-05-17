@@ -2,7 +2,6 @@ using System;
 
 namespace GlobalEnums
 {
-    // Token: 0x0200083B RID: 2107
     [Flags]
     public enum HeroLockStates
     {

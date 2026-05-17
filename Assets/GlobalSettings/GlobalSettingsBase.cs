@@ -90,9 +90,6 @@ namespace GlobalSettings
                 GlobalSettingsBase<T>._instance = default(T);
             }
         }
-
-
-        // Token: 0x04004F57 RID: 20311
         private static int _orderHandle;
         private static bool _foundInstance;
         private static T _instance;
