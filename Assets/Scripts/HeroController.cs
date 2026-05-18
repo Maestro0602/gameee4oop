@@ -71,7 +71,7 @@ public class HeroController : MonoBehaviour
 
     [Header("Ground Check Config")]
     [SerializeField] private Transform groundCheck;
-    [SerializeField] private float groundCheckRadius = 0.2f;
+    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.1f);
     [SerializeField] private LayerMask groundLayer;
 
     // FIX 1 (Overlap Layer) + FIX 2 (GroundCheck Position):
@@ -103,9 +103,10 @@ public class HeroController : MonoBehaviour
 
         // FIX 1: Use NonAlloc variant and filter out hits that are our own collider.
         // This prevents the player's own Collider2D from satisfying the ground check.
-        int hitCount = Physics2D.OverlapCircleNonAlloc(
+        int hitCount = Physics2D.OverlapBoxNonAlloc(
             checkPos,
-            groundCheckRadius,
+            groundCheckSize,
+            0f,
             groundHits,
             groundLayer
         );
@@ -148,11 +149,11 @@ public class HeroController : MonoBehaviour
         // Green when grounded, red when airborne (cState may be null in edit mode)
         bool grounded = cState != null && cState.onGround;
         Gizmos.color = grounded ? new Color(0f, 1f, 0f, 0.5f) : new Color(1f, 0f, 0f, 0.5f);
-        Gizmos.DrawSphere(checkPos, groundCheckRadius);
+        Gizmos.DrawCube(checkPos, groundCheckSize);
 
         // White outline for clarity regardless of state
         Gizmos.color = Color.white;
-        Gizmos.DrawWireSphere(checkPos, groundCheckRadius);
+        Gizmos.DrawWireCube(checkPos, groundCheckSize);
     }
 
     private Rigidbody2D rb2d;

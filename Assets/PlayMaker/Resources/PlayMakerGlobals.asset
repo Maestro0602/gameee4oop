@@ -32,4 +32,6 @@ MonoBehaviour:
     - 
     variableCategoryIDs: 
   events:
+  - Moveleft
   - Idle
+  - MoveRight
