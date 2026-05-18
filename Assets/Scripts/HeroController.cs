@@ -291,9 +291,6 @@ public class HeroController : MonoBehaviour
         doubleJumped = false;
         airDashed = false;
         cState.jumping = false;
-        // FIX 5: Grant the midair jump budget here, on landing — not inside Jump().
-        // Setting it inside Jump() gave the player a free double jump the instant they
-        // left the ground, before they were even considered airborne.
         JUMPS_LEFT = 1;
     }
 
