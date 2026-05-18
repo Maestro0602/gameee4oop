@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 using GlobalEnums;
@@ -51,6 +51,7 @@ public class HeroController : MonoBehaviour
     private int doubleJump_steps;
     private bool doubleJumped;
     private bool airDashed;
+    private bool wasOnGround;
     private float dash_timer;
     private float dash_time;
 
@@ -73,24 +74,85 @@ public class HeroController : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundLayer;
 
-    // A better approach matching the actual game is using collider bounds, but this matches the placeholder
+    // FIX 1 (Overlap Layer) + FIX 2 (GroundCheck Position):
+    //   - Cache the player's own collider and pass a ContactFilter2D that excludes it.
+    //   - Add a -0.01f sink so the probe point is just below the collider edge, not flush with it.
+    private Collider2D selfCollider;
+    private readonly Collider2D[] groundHits = new Collider2D[4];
+
     private void CheckGround()
     {
-        // Fallback position if groundCheck is missing: just slightly below the center of the player
-        Vector2 checkPos = groundCheck != null 
-            ? (Vector2)groundCheck.position 
-            : (Vector2)transform.position + new Vector2(0, -0.5f);
+        Vector2 checkPos;
 
-        // Fallback layer if groundLayer is "Nothing": allow anything EXCEPT the player itself
-        int mask = groundLayer.value != 0 
-            ? groundLayer.value 
-            : ~(1 << gameObject.layer);
+        if (groundCheck != null)
+        {
+            checkPos = groundCheck.position;
+        }
+        else if (selfCollider != null)
+        {
+            Bounds bounds = selfCollider.bounds;
+            // FIX 2: sink 0.01 units below the collider floor so flush surfaces register
+            checkPos = new Vector2(bounds.center.x, bounds.min.y - 0.01f);
+        }
+        else
+        {
+            checkPos = (Vector2)transform.position + new Vector2(0f, -0.51f);
+        }
 
-        cState.onGround = Physics2D.OverlapCircle(
+        bool previousGround = cState.onGround;
+
+        // FIX 1: Use NonAlloc variant and filter out hits that are our own collider.
+        // This prevents the player's own Collider2D from satisfying the ground check.
+        int hitCount = Physics2D.OverlapCircleNonAlloc(
             checkPos,
             groundCheckRadius,
-            mask
+            groundHits,
+            groundLayer
         );
+
+        bool hitGround = false;
+        for (int i = 0; i < hitCount; i++)
+        {
+            if (groundHits[i] != null && groundHits[i] != selfCollider)
+            {
+                hitGround = true;
+                break;
+            }
+        }
+
+        cState.onGround = hitGround;
+
+        if (cState.onGround != previousGround)
+            Debug.Log($"Ground state changed: {cState.onGround}");
+    }
+
+    // FIX 3: Debug visualization — draw the ground probe in the Scene view at all times.
+    private void OnDrawGizmos()
+    {
+        Vector2 checkPos;
+
+        if (groundCheck != null)
+        {
+            checkPos = groundCheck.position;
+        }
+        else if (TryGetComponent<Collider2D>(out var col))
+        {
+            Bounds bounds = col.bounds;
+            checkPos = new Vector2(bounds.center.x, bounds.min.y - 0.01f);
+        }
+        else
+        {
+            checkPos = (Vector2)transform.position + new Vector2(0f, -0.51f);
+        }
+
+        // Green when grounded, red when airborne (cState may be null in edit mode)
+        bool grounded = cState != null && cState.onGround;
+        Gizmos.color = grounded ? new Color(0f, 1f, 0f, 0.5f) : new Color(1f, 0f, 0f, 0.5f);
+        Gizmos.DrawSphere(checkPos, groundCheckRadius);
+
+        // White outline for clarity regardless of state
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(checkPos, groundCheckRadius);
     }
 
     private Rigidbody2D rb2d;
@@ -121,44 +183,77 @@ public class HeroController : MonoBehaviour
             UnityEngine.Object.Destroy(gameObject);
             return;
         }
-
         instance = this;
         rb2d = GetComponent<Rigidbody2D>();
+        // FIX 1: Cache own collider once so CheckGround can exclude it every frame.
+        selfCollider = GetComponent<Collider2D>();
         if (cState == null)
             cState = new HeroControllerStates();
-        // deifne state so u cant inf jump (next week)
+
+        // FIX 5: JUMPS_LEFT starts at 0 — the player has no midair jumps until they land.
+        // ResetMoveState() sets it to 1 on landing, which is the correct grant point.
+        JUMPS_LEFT = 0;
     }
 
-    private bool jumpQueued; // add this field at the top with your other private fields
+    private bool jumpQueued;
+    private bool dashQueued;
+    private float dashCooldownTimer;
+    private float dashDurationTimer;
+    private float jumpCooldownTimer;
+    public int JUMPS_LEFT;
 
     private void Update()
     {
+        // FIX 4: Only READ input here. Never call Jump() or DoubleJump() from Update.
+        // Physics mutations belong exclusively in FixedUpdate to avoid double-firing
+        // on frames where both Update and FixedUpdate run (which is the common case).
         move_input = ReadMoveInput();
         if (ReadJumpInput()) jumpQueued = true;
-                                              
+        if (ReadDashInput()) dashQueued = true;
+
+        // Timers are fine in Update — they don't touch the Rigidbody.
+        if (dashCooldownTimer > 0) dashCooldownTimer -= Time.deltaTime;
+        if (dashDurationTimer > 0) dashDurationTimer -= Time.deltaTime;
+        if (jumpCooldownTimer > 0) jumpCooldownTimer -= Time.deltaTime;
     }
 
     private void FixedUpdate()
     {
-        CheckGround(); 
+        CheckGround(); // onGround is authoritative from here down
 
+        if (cState.onGround && !wasOnGround)
+            ResetMoveState();
+        wasOnGround = cState.onGround;
+
+        // FIX 4: All jump/dash execution lives only in FixedUpdate.
         if (jumpQueued)
         {
-            if (cState.onGround)
-            {
+            if (cState.onGround && jumpCooldownTimer <= 0f)
                 Jump();
-            }
-            else if (!cState.doubleJumping)
-            {
-                // Simple double jump implementation
-                cState.doubleJumping = true;
-                doubleJump_steps = 0;
+            else if (!cState.onGround && JUMPS_LEFT > 0)
                 DoubleJump();
-            }
+
             jumpQueued = false;
         }
 
-        Move(move_input, true); // moved here from Update, always useInput: true
+        if (dashQueued && !cState.dashing && dashCooldownTimer <= 0)
+        {
+            if (cState.onGround || (!cState.onGround && !airDashed))
+                Dash();
+            dashQueued = false;
+        }
+
+        if (cState.dashing)
+        {
+            if (dashDurationTimer <= 0)
+                EndDash();
+            else
+                rb2d.linearVelocity = new Vector2(FacingDirection * DASH_SPEED, 0f);
+        }
+        else
+        {
+            Move(move_input, true);
+        }
     }
 
     // -------------------------------------------------------
@@ -184,23 +279,30 @@ public class HeroController : MonoBehaviour
             FacingDirection = -1;
     }
 
-    // --- State ---
-
     private void SetState(ActorStates newState)
     {
         prev_hero_state = hero_state;
         hero_state = newState;
     }
 
-    // --- Ground ---
+    private void ResetMoveState()
+    {
+        cState.doubleJumping = false;
+        doubleJumped = false;
+        airDashed = false;
+        cState.jumping = false;
+        // FIX 5: Grant the midair jump budget here, on landing — not inside Jump().
+        // Setting it inside Jump() gave the player a free double jump the instant they
+        // left the ground, before they were even considered airborne.
+        JUMPS_LEFT = 1;
+    }
 
     private void UpdateGroundState()
     {
         if (cState.onGround)
         {
             SetState(ActorStates.grounded);
-            jump_steps = 0;         // added
-            cState.jumping = false; // added
+            jump_steps = 0;
         }
     }
 
@@ -227,7 +329,7 @@ public class HeroController : MonoBehaviour
         return GetRunSpeed();
     }
 
-    private float GetWalkSpeed() => WALK_SPEED; // was: hardcoded 3f
+    private float GetWalkSpeed() => WALK_SPEED;
     private float GetRunSpeed() => RUN_SPEED;
 
     // --- Extra Velocities ---
@@ -267,65 +369,54 @@ public class HeroController : MonoBehaviour
     // Actions
     // -------------------------------------------------------
 
-    //public void Jump()
-    //{
-    //    if (jump_steps <= JUMP_STEPS)
-    //    {
-    //        Vector2 velocity = rb2d.linearVelocity;
-    //        velocity.y = JUMP_SPEED;
-    //        rb2d.linearVelocity = velocity;
-    //        jump_steps++;
-    //    }
-    //    else
-    //    {
-    //        cState.jumping = false;
-    //    }
-    //}
     public void Jump()
     {
         jump_steps = 0;
         cState.jumping = true;
+        jumpCooldownTimer = 0.2f;
+        // FIX 5: Removed "JUMPS_LEFT = 1" from here.
+        // The double-jump budget is granted by ResetMoveState() on landing, not here.
 
-        // Resetting Y velocity to exactly 0 to allow consistent jump height regardless of falling speed
         Vector2 v = rb2d.linearVelocity;
         v.y = JUMP_SPEED;
         rb2d.linearVelocity = v;
     }
+
     public void DoubleJump()
     {
         cState.doubleJumping = true;
-        // Basic instant double jump for now, mimicking jump logic
+        doubleJumped = true;
+        JUMPS_LEFT--;
+
         Vector2 v = rb2d.linearVelocity;
         v.y = JUMP_SPEED * 1.1f;
         rb2d.linearVelocity = v;
     }
 
+    public void Dash()
+    {
+        cState.dashing = true;
+        dashDurationTimer = DASH_TIME;
+        dashCooldownTimer = DASH_COOLDOWN;
+
+        if (!cState.onGround)
+            airDashed = true;
+
+        Vector2 v = rb2d.linearVelocity;
+        v.y = 0f;
+        v.x = FacingDirection * DASH_SPEED;
+        rb2d.linearVelocity = v;
+    }
+
+    private void EndDash()
+    {
+        cState.dashing = false;
+        rb2d.linearVelocity = new Vector2(0f, rb2d.linearVelocity.y);
+    }
+
     // -------------------------------------------------------
     // Physics
     // -------------------------------------------------------
-
-    /*
-    public void AffectedByGravity(bool gravityApplies)
-    {
-        if (gravityApplies && this.CheckAndRequestUnlock(HeroLockStates.GravityLocked))
-        {
-            return;
-        }
-        this.RemoveUnlockRequest(HeroLockStates.GravityLocked);
-        this.IsGravityApplied = gravityApplies;
-        if (this.rb2d.gravityScale > Mathf.Epsilon && !gravityApplies)
-        {
-            this.prevGravityScale = this.rb2d.gravityScale;
-            this.rb2d.gravityScale = 0f;
-            return;
-        }
-        if (this.rb2d.gravityScale <= Mathf.Epsilon && gravityApplies)
-        {
-            this.rb2d.gravityScale = this.prevGravityScale;
-            this.prevGravityScale = 0f;
-        }
-    }
-    */
 
     public bool GetState(string stateName)
     {
@@ -333,22 +424,12 @@ public class HeroController : MonoBehaviour
     }
 
     // -------------------------------------------------------
-    // states
+    // States
     // -------------------------------------------------------
-    public bool GetCState(string stateName)
-    {
-        return this.cState.GetState(stateName);
-    }
 
-    public void SetCState(string stateName, bool value)
-    {
-        this.cState.SetState(stateName, value);
-    }
-
-    public static bool CStateExists(string stateName)
-    {
-        return HeroControllerStates.CStateExists(stateName);
-    }
+    public bool GetCState(string stateName) => this.cState.GetState(stateName);
+    public void SetCState(string stateName, bool value) => this.cState.SetState(stateName, value);
+    public static bool CStateExists(string stateName) => HeroControllerStates.CStateExists(stateName);
 
     // -------------------------------------------------------
     // Input
@@ -371,21 +452,21 @@ public class HeroController : MonoBehaviour
         return 0f;
 #endif
     }
+
     private bool ReadAttackInput()
     {
 #if ENABLE_INPUT_SYSTEM
         return Keyboard.current != null && Keyboard.current.zKey.wasPressedThisFrame;
 #elif ENABLE_LEGACY_INPUT_MANAGER
-    return Input.GetButtonDown("Fire1");
+        return Input.GetButtonDown("Fire1");
 #else
-    return false;
+        return false;
 #endif
     }
 
     private bool ReadJumpInput()
     {
 #if ENABLE_INPUT_SYSTEM
-        // Check for Space key OR up arrow OR 'W' key for jump
         if (Keyboard.current != null)
         {
             return Keyboard.current.spaceKey.wasPressedThisFrame ||
@@ -400,56 +481,27 @@ public class HeroController : MonoBehaviour
 #endif
     }
 
+    private bool ReadDashInput()
+    {
+#if ENABLE_INPUT_SYSTEM
+        return Keyboard.current != null &&
+               (Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.cKey.wasPressedThisFrame);
+#elif ENABLE_LEGACY_INPUT_MANAGER
+        return Input.GetButtonDown("Fire3");
+#else
+        return false;
+#endif
+    }
+
     // -------------------------------------------------------
     // Inner Types
     // -------------------------------------------------------
-
-    /*
-    [Serializable]
-    public class HeroControllerStates
-    {
-        public bool facingRight;
-        public bool onGround;
-        public bool wallSliding;
-        public bool inWalkZone;
-        public bool downSpikeRecovery;
-        public bool isTouchingSlopeLeft;
-        public bool isTouchingSlopeRight;
-        public bool invulnerable;
-        public int invulnerableCount;
-
-        private static BoolFieldAccessOptimizer<HeroControllerStates> boolFieldAccessOptimizer;
-
-        public bool Invulnerable => invulnerable || invulnerableCount > 0;
-
-        public HeroControllerStates()
-        {
-            facingRight = false;
-            if (boolFieldAccessOptimizer == null)
-                boolFieldAccessOptimizer = new BoolFieldAccessOptimizer<HeroControllerStates>();
-            Reset();
-        }
-
-        public void Reset()
-        {
-            onGround = false;
-            wallSliding = false;
-            inWalkZone = false;
-            downSpikeRecovery = false;
-            isTouchingSlopeLeft = false;git 
-            isTouchingSlopeRight = false;
-            invulnerable = false;
-            invulnerableCount = 0;
-        }
-    }
-    */
 
     [Serializable]
     public struct DecayingVelocity
     {
         public Vector2 Velocity;
         public SkipBehaviours SkipBehaviour;
-
 
         public enum SkipBehaviours
         {
