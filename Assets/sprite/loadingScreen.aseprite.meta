@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: d911a4a67ee533a40bc6006eb40c33a5
+guid: 57aa42b1f0aa56e439d6dedae161d091
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -127,30 +127,9 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: capy-stand (2)
+  - name: loadingScreen
     originalName: 
-    pivot: {x: 0.5769231, y: -0.53333336}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    customData: 
-    rect:
-      serializedVersion: 2
-      x: 4
-      y: 43
-      width: 26
-      height: 30
-    spriteID: 7b1eb6da442cf314e9528e7951de951f
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: -13, y: 27}
-  - name: Frame_1
-    originalName: 
-    pivot: {x: 0.5769231, y: -0.516129}
+    pivot: {x: 0.5, y: 0}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
@@ -158,9 +137,9 @@ ScriptedImporter:
       serializedVersion: 2
       x: 4
       y: 4
-      width: 26
-      height: 31
-    spriteID: ff1dced87cfb1774d8da4bcdb5831c0b
+      width: 640
+      height: 360
+    spriteID: beec50f82b1eb0e4da2605ba3dfe7573
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -174,34 +153,25 @@ ScriptedImporter:
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 2804953605
+      value0: 2241686466
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: capy-stand (2)
+    name: loadingScreen
     layerFlags: 0
     layerType: 0
     blendMode: 0
     cells:
-    - name: Frame_0
+    - name: loadingScreen
       frameIndex: 0
       additiveSortOrder: 0
       cellRect:
         x: 0
         y: 0
-        width: 64
-        height: 64
-      spriteId: 7b1eb6da442cf314e9528e7951de951f
-    - name: Frame_1
-      frameIndex: 1
-      additiveSortOrder: 0
-      cellRect:
-        x: 17
-        y: 16
-        width: 26
-        height: 31
-      spriteId: ff1dced87cfb1774d8da4bcdb5831c0b
+        width: 640
+        height: 360
+      spriteId: beec50f82b1eb0e4da2605ba3dfe7573
     linkedCells: []
     tileCells: []
     tileSetIndex: 0
@@ -211,5 +181,5 @@ ScriptedImporter:
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 64, y: 64}
-  previousTextureSize: {x: 64, y: 128}
+  canvasSize: {x: 640, y: 360}
+  previousTextureSize: {x: 1024, y: 512}

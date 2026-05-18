@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: d911a4a67ee533a40bc6006eb40c33a5
+guid: 9441f9ad370947f4f9db6b903c1bc3e9
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -127,19 +127,19 @@ ScriptedImporter:
     tessellationDetail: 0
     uvTransform: {x: 0, y: 0}
   animatedSpriteImportData:
-  - name: capy-stand (2)
+  - name: Frame_0
     originalName: 
-    pivot: {x: 0.5769231, y: -0.53333336}
+    pivot: {x: 0.47826087, y: -0.35}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
     rect:
       serializedVersion: 2
-      x: 4
-      y: 43
-      width: 26
-      height: 30
-    spriteID: 7b1eb6da442cf314e9528e7951de951f
+      x: 35
+      y: 33
+      width: 23
+      height: 20
+    spriteID: 2ae1c67363e750840893c0af98ec82b6
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -147,10 +147,31 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: -13, y: 27}
+    uvTransform: {x: 35, y: 33}
   - name: Frame_1
     originalName: 
-    pivot: {x: 0.5769231, y: -0.516129}
+    pivot: {x: 0.47826087, y: -0.33333334}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 4
+      y: 34
+      width: 23
+      height: 21
+    spriteID: 3cd1a243a707673418c05f939559d2e5
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 4, y: 34}
+  - name: Frame_2
+    originalName: 
+    pivot: {x: 0.47826087, y: -0.3181818}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
@@ -158,9 +179,9 @@ ScriptedImporter:
       serializedVersion: 2
       x: 4
       y: 4
-      width: 26
-      height: 31
-    spriteID: ff1dced87cfb1774d8da4bcdb5831c0b
+      width: 23
+      height: 22
+    spriteID: 2ddd1fd3dfd5aa54e83cbbef31832fef
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -169,17 +190,38 @@ ScriptedImporter:
     edges: []
     tessellationDetail: 0
     uvTransform: {x: 4, y: 4}
+  - name: Frame_3
+    originalName: 
+    pivot: {x: 0.47826087, y: -0.33333334}
+    alignment: 9
+    border: {x: 0, y: 0, z: 0, w: 0}
+    customData: 
+    rect:
+      serializedVersion: 2
+      x: 35
+      y: 4
+      width: 23
+      height: 21
+    spriteID: 386cc0608ea93674192bcd3f062e8b3f
+    spriteBone: []
+    spriteOutline: []
+    vertices: []
+    spritePhysicsOutline: []
+    indices: 
+    edges: []
+    tessellationDetail: 0
+    uvTransform: {x: 35, y: 4}
   spriteSheetImportData: []
   tileSetImportData: []
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 2804953605
+      value0: 13760399
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: capy-stand (2)
+    name: king_animated
     layerFlags: 0
     layerType: 0
     blendMode: 0
@@ -188,20 +230,38 @@ ScriptedImporter:
       frameIndex: 0
       additiveSortOrder: 0
       cellRect:
-        x: 0
-        y: 0
-        width: 64
-        height: 64
-      spriteId: 7b1eb6da442cf314e9528e7951de951f
+        x: 5
+        y: 7
+        width: 23
+        height: 20
+      spriteId: 2ae1c67363e750840893c0af98ec82b6
     - name: Frame_1
       frameIndex: 1
       additiveSortOrder: 0
       cellRect:
-        x: 17
-        y: 16
-        width: 26
-        height: 31
-      spriteId: ff1dced87cfb1774d8da4bcdb5831c0b
+        x: 5
+        y: 7
+        width: 23
+        height: 21
+      spriteId: 3cd1a243a707673418c05f939559d2e5
+    - name: Frame_2
+      frameIndex: 2
+      additiveSortOrder: 0
+      cellRect:
+        x: 5
+        y: 7
+        width: 23
+        height: 22
+      spriteId: 2ddd1fd3dfd5aa54e83cbbef31832fef
+    - name: Frame_3
+      frameIndex: 3
+      additiveSortOrder: 0
+      cellRect:
+        x: 5
+        y: 7
+        width: 23
+        height: 21
+      spriteId: 386cc0608ea93674192bcd3f062e8b3f
     linkedCells: []
     tileCells: []
     tileSetIndex: 0
@@ -211,5 +271,5 @@ ScriptedImporter:
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
-  canvasSize: {x: 64, y: 64}
-  previousTextureSize: {x: 64, y: 128}
+  canvasSize: {x: 32, y: 32}
+  previousTextureSize: {x: 64, y: 64}
