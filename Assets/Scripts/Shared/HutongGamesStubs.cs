@@ -1,0 +1,6 @@
+namespace HutongGames
+{
+    namespace PlayMaker
+    {
+    }
+}
