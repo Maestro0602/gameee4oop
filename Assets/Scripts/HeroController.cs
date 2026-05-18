@@ -76,12 +76,21 @@ public class HeroController : MonoBehaviour
     // A better approach matching the actual game is using collider bounds, but this matches the placeholder
     private void CheckGround()
     {
+        // Fallback position if groundCheck is missing: just slightly below the center of the player
+        Vector2 checkPos = groundCheck != null 
+            ? (Vector2)groundCheck.position 
+            : (Vector2)transform.position + new Vector2(0, -0.5f);
+
+        // Fallback layer if groundLayer is "Nothing": allow anything EXCEPT the player itself
+        int mask = groundLayer.value != 0 
+            ? groundLayer.value 
+            : ~(1 << gameObject.layer);
+
         cState.onGround = Physics2D.OverlapCircle(
-            groundCheck.position,
+            checkPos,
             groundCheckRadius,
-            groundLayer
+            mask
         );
-        cState.wasOnGround = cState.onGround;
     }
 
     private Rigidbody2D rb2d;
@@ -120,23 +129,36 @@ public class HeroController : MonoBehaviour
         // deifne state so u cant inf jump (next week)
     }
 
+    private bool jumpQueued; // add this field at the top with your other private fields
+
     private void Update()
     {
         move_input = ReadMoveInput();
-        if (!Mathf.Approximately(move_input, 0f))
-            Move(move_input, true);
-
-        if (ReadJumpInput() && cState.onGround)
-            Jump();
-
-
-        // Store physics and store input (next week)
+        if (ReadJumpInput()) jumpQueued = true;
+                                              
     }
 
     private void FixedUpdate()
     {
-        CheckGround();
-        Move(move_input, false);
+        CheckGround(); 
+
+        if (jumpQueued)
+        {
+            if (cState.onGround)
+            {
+                Jump();
+            }
+            else if (!cState.doubleJumping)
+            {
+                // Simple double jump implementation
+                cState.doubleJumping = true;
+                doubleJump_steps = 0;
+                DoubleJump();
+            }
+            jumpQueued = false;
+        }
+
+        Move(move_input, true); // moved here from Update, always useInput: true
     }
 
     // -------------------------------------------------------
@@ -175,7 +197,11 @@ public class HeroController : MonoBehaviour
     private void UpdateGroundState()
     {
         if (cState.onGround)
+        {
             SetState(ActorStates.grounded);
+            jump_steps = 0;         // added
+            cState.jumping = false; // added
+        }
     }
 
     // --- Movement Blocking ---
@@ -201,7 +227,7 @@ public class HeroController : MonoBehaviour
         return GetRunSpeed();
     }
 
-    private float GetWalkSpeed() => 3f; // TODO: replace with real value
+    private float GetWalkSpeed() => WALK_SPEED; // was: hardcoded 3f
     private float GetRunSpeed() => RUN_SPEED;
 
     // --- Extra Velocities ---
@@ -241,39 +267,37 @@ public class HeroController : MonoBehaviour
     // Actions
     // -------------------------------------------------------
 
+    //public void Jump()
+    //{
+    //    if (jump_steps <= JUMP_STEPS)
+    //    {
+    //        Vector2 velocity = rb2d.linearVelocity;
+    //        velocity.y = JUMP_SPEED;
+    //        rb2d.linearVelocity = velocity;
+    //        jump_steps++;
+    //    }
+    //    else
+    //    {
+    //        cState.jumping = false;
+    //    }
+    //}
     public void Jump()
     {
-        if (jump_steps <= JUMP_STEPS)
-        {
-            Vector2 velocity = rb2d.linearVelocity;
-            velocity.y = JUMP_SPEED;
-            rb2d.linearVelocity = velocity;
-            jump_steps++;
-        }
-        else
-        {
-            cState.jumping = false;
-        }
-    }
+        jump_steps = 0;
+        cState.jumping = true;
 
+        // Resetting Y velocity to exactly 0 to allow consistent jump height regardless of falling speed
+        Vector2 v = rb2d.linearVelocity;
+        v.y = JUMP_SPEED;
+        rb2d.linearVelocity = v;
+    }
     public void DoubleJump()
     {
-        if (doubleJump_steps <= DOUBLE_JUMP_RISE_STEPS + DOUBLE_JUMP_FALL_STEPS)
-        {
-            if (doubleJump_steps > DOUBLE_JUMP_FALL_STEPS)
-            {
-                rb2d.linearVelocity = new Vector2(rb2d.linearVelocity.x, JUMP_SPEED * 1.1f);
-            }
-            doubleJump_steps++;
-        }
-        else
-        {
-            cState.doubleJumping = false;
-        }
-        if (cState.onGround)
-        {
-            cState.doubleJumping = false;
-        }
+        cState.doubleJumping = true;
+        // Basic instant double jump for now, mimicking jump logic
+        Vector2 v = rb2d.linearVelocity;
+        v.y = JUMP_SPEED * 1.1f;
+        rb2d.linearVelocity = v;
     }
 
     // -------------------------------------------------------
@@ -361,11 +385,18 @@ public class HeroController : MonoBehaviour
     private bool ReadJumpInput()
     {
 #if ENABLE_INPUT_SYSTEM
-        return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
+        // Check for Space key OR up arrow OR 'W' key for jump
+        if (Keyboard.current != null)
+        {
+            return Keyboard.current.spaceKey.wasPressedThisFrame ||
+                   Keyboard.current.upArrowKey.wasPressedThisFrame ||
+                   Keyboard.current.wKey.wasPressedThisFrame;
+        }
+        return false;
 #elif ENABLE_LEGACY_INPUT_MANAGER
-    return Input.GetButtonDown("Jump");
+        return Input.GetButtonDown("Jump");
 #else
-    return false;
+        return false;
 #endif
     }
 
@@ -405,7 +436,7 @@ public class HeroController : MonoBehaviour
             wallSliding = false;
             inWalkZone = false;
             downSpikeRecovery = false;
-            isTouchingSlopeLeft = false;
+            isTouchingSlopeLeft = false;git 
             isTouchingSlopeRight = false;
             invulnerable = false;
             invulnerableCount = 0;
