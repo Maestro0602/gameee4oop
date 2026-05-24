@@ -16,15 +16,16 @@ public class HeroController : MonoBehaviour
 
     [Header("Movement - Jump")]
     [SerializeField] private float JUMP_SPEED = 16.5f;
-    [SerializeField] private float MIN_JUMP_SPEED = 5f;
     [SerializeField] private int JUMP_STEPS = 16;
     [SerializeField] private int JUMP_STEPS_MIN = 4;
-    [SerializeField] private int DOUBLE_JUMP_RISE_STEPS = 5;
-    [SerializeField] private int DOUBLE_JUMP_FALL_STEPS = 5;
-    [SerializeField] private float JUMP_ABILITY_GROUND_RAY_LENGTH = 0.5f;
+
+    [Header("Movement - Double Jump")]
+    [SerializeField] private bool canDoubleJump = false;
+    [SerializeField] private float doubleJumpSpeed = 18f;
 
     [Header("Movement - Dash")]
     [SerializeField] private float DASH_SPEED = 20f;
+    [SerializeField] private float DASH_DISTANCE = 6f; 
     [SerializeField] private float DASH_TIME = 0.3f;
     [SerializeField] private float AIR_DASH_TIME = 0.3f;
     [SerializeField] private float DOWN_DASH_TIME = 0.2f;
@@ -71,7 +72,7 @@ public class HeroController : MonoBehaviour
 
     [Header("Ground Check Config")]
     [SerializeField] private Transform groundCheck;
-    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.1f);
+    [SerializeField] private Vector2 groundCheckSize = new Vector2(1.2f, 0.1f);
     [SerializeField] private LayerMask groundLayer;
 
     // FIX 1 (Overlap Layer) + FIX 2 (GroundCheck Position):
@@ -231,7 +232,7 @@ public class HeroController : MonoBehaviour
         {
             if (cState.onGround && jumpCooldownTimer <= 0f)
                 Jump();
-            else if (!cState.onGround && JUMPS_LEFT > 0)
+            else if (!cState.onGround && JUMPS_LEFT > 0 && canDoubleJump)
                 DoubleJump();
 
             jumpQueued = false;
@@ -254,6 +255,32 @@ public class HeroController : MonoBehaviour
         else
         {
             Move(move_input, true);
+        }
+
+        // --- Variable Jump Logic ---
+        if (cState.jumping && !cState.onGround)
+        {
+            jump_steps++;
+
+            // Force jump upward duration for at least JUMP_STEPS_MIN frames even if released early, 
+            // otherwise continue while held up to JUMP_STEPS max.
+            if (ReadJumpInputHeld() || jump_steps < JUMP_STEPS_MIN)
+            {
+                if (jump_steps <= JUMP_STEPS)
+                {
+                    Vector2 v = rb2d.linearVelocity;
+                    v.y = JUMP_SPEED;
+                    rb2d.linearVelocity = v;
+                }
+                else
+                {
+                    CancelJump();
+                }
+            }
+            else
+            {
+                JumpReleased();
+            }
         }
     }
 
@@ -278,6 +305,30 @@ public class HeroController : MonoBehaviour
             FacingDirection = 1;
         else if (moveDirection < -0.01f)
             FacingDirection = -1;
+
+        TrySetCorrectFacing();
+    }
+
+    // --- Facing ---
+
+    public void trysettCorrectFacing(bool force = false)
+    {
+        TrySetCorrectFacing(force);
+    }
+
+    public void TrySetCorrectFacing(bool force = false)
+    {
+        bool expectedFacingRight = (FacingDirection == 1);
+
+        if (cState.facingRight != expectedFacingRight || force)
+        {
+            cState.facingRight = expectedFacingRight;
+
+
+            Vector3 localScale = transform.localScale;
+            localScale.x = cState.facingRight ? Mathf.Abs(localScale.x) : -Mathf.Abs(localScale.x);
+            transform.localScale = localScale;
+        }
     }
 
     private void SetState(ActorStates newState)
@@ -303,7 +354,33 @@ public class HeroController : MonoBehaviour
             jump_steps = 0;
         }
     }
-
+    //-------------------------------------------
+    //              Attack
+    //-------------------------------------------
+    private void Attack(AttackDirection attackDir)
+    {
+        this.TrySetCorrectFacing(false);
+    }
+    //    private void DoAttack()
+    //    {
+    //        // Evaluates direction based on Input
+    //        if (this.inputHandler.inputActions.Up.IsPressed)
+    //        {
+    //        this.Attack(AttackDirection.upward);
+    //        return;
+    //    }
+    //        if (!this.inputHandler.inputActions.Down.IsPressed)
+    //        {
+    //            this.Attack(AttackDirection.normal);
+    //            return;
+    //        }
+    //if (this.allowAttackCancellingDownspikeRecovery || !this.cState.onGround)
+    //{
+    //    this.Attack(AttackDirection.downward);
+    //    return;
+    //}
+    //this.Attack(AttackDirection.normal);
+    //    }
     // --- Movement Blocking ---
 
     private float ApplyMovementBlocking(float moveDirection)
@@ -372,13 +449,49 @@ public class HeroController : MonoBehaviour
         jump_steps = 0;
         cState.jumping = true;
         jumpCooldownTimer = 0.2f;
-        // FIX 5: Removed "JUMPS_LEFT = 1" from here.
-        // The double-jump budget is granted by ResetMoveState() on landing, not here.
 
         Vector2 v = rb2d.linearVelocity;
         v.y = JUMP_SPEED;
         rb2d.linearVelocity = v;
     }
+
+    private void JumpReleased()
+    {
+        if (cState.jumping)
+        {
+            // If the minimum jump frames have passed and we are still moving up, instantly stunt vertical speed to reward the short hop
+            if (jump_steps >= JUMP_STEPS_MIN && rb2d.linearVelocity.y > 0)
+            {
+                Vector2 v = rb2d.linearVelocity;
+                v.y *= 0.5f;
+                rb2d.linearVelocity = v;
+            }
+            CancelJump();
+        }
+    }
+
+    private void CancelJump()
+    {
+        cState.jumping = false;
+    }
+    //public bool TrySetCorrectFacing(bool force = false)
+    //{
+    //    if (!this.CanTurn && !force)
+    //    {
+    //        return false;
+    //    }
+    //    if (this.move_input > 0f && !this.cState.facingRight)
+    //    {
+    //        this.FlipSprite();
+    //        return true;
+    //    }
+    //    if (this.move_input < 0f && this.cState.facingRight)
+    //    {
+    //        this.FlipSprite();
+    //        return true;
+    //    }
+    //    return false;
+    //}
 
     public void DoubleJump()
     {
@@ -387,14 +500,15 @@ public class HeroController : MonoBehaviour
         JUMPS_LEFT--;
 
         Vector2 v = rb2d.linearVelocity;
-        v.y = JUMP_SPEED * 1.1f;
+        v.y = doubleJumpSpeed;
         rb2d.linearVelocity = v;
     }
 
     public void Dash()
     {
         cState.dashing = true;
-        dashDurationTimer = DASH_TIME;
+        // Time = Distance / Speed. This allows the dash to perfectly reflect the DASH_SPEED and DASH_DISTANCE in the inspector.
+        dashDurationTimer = DASH_DISTANCE / DASH_SPEED;
         dashCooldownTimer = DASH_COOLDOWN;
 
         if (!cState.onGround)
@@ -479,13 +593,30 @@ public class HeroController : MonoBehaviour
 #endif
     }
 
+    private bool ReadJumpInputHeld()
+    {
+#if ENABLE_INPUT_SYSTEM
+        if (Keyboard.current != null)
+        {
+            return Keyboard.current.spaceKey.isPressed ||
+                   Keyboard.current.upArrowKey.isPressed ||
+                   Keyboard.current.wKey.isPressed;
+        }
+        return false;
+#elif ENABLE_LEGACY_INPUT_MANAGER
+        return Input.GetButton("Jump");
+#else
+        return false;
+#endif
+    }
+
     private bool ReadDashInput()
     {
 #if ENABLE_INPUT_SYSTEM
         return Keyboard.current != null &&
-               (Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.cKey.wasPressedThisFrame);
+               (Keyboard.current.leftShiftKey.wasPressedThisFrame || Keyboard.current.cKey.wasPressedThisFrame || Keyboard.current.kKey.wasPressedThisFrame);
 #elif ENABLE_LEGACY_INPUT_MANAGER
-        return Input.GetButtonDown("Fire3");
+        return Input.GetButtonDown("Fire3") || Input.GetKeyDown(KeyCode.K);
 #else
         return false;
 #endif
