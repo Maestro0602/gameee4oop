@@ -1,13 +1,8 @@
 fileFormatVersion: 2
-guid: b0b00b291a65afb4fafa205165053c5c
+guid: 930150a0981465b4fb2f139f8a3cc113
 ScriptedImporter:
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:AnimationClip
-      assembly: UnityEngine.AnimationModule
-      name: capy-jump_Clip
-    second: {fileID: 7400000, guid: 06237b8bad2f007498bc977f215144e0, type: 2}
+  externalObjects: {}
   serializedVersion: 2
   userData: 
   assetBundleName: 
@@ -107,7 +102,7 @@ ScriptedImporter:
     generateIndividualEvents: 1
     generateSpriteAtlas: 1
   importFileNodeState: 1
-  platformSettingsDirtyTick: 639147483961396156
+  platformSettingsDirtyTick: 0
   textureAssetName: 
   singleSpriteImportData:
   - name: 
@@ -134,17 +129,17 @@ ScriptedImporter:
   animatedSpriteImportData:
   - name: Frame_0
     originalName: 
-    pivot: {x: 0.5769231, y: -0.53333336}
+    pivot: {x: 0.6857143, y: -0.43243244}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
     rect:
       serializedVersion: 2
-      x: 42
-      y: 42
-      width: 26
-      height: 30
-    spriteID: 9983b2b28a36310409381d4aeebc7cd4
+      x: 4
+      y: 4
+      width: 35
+      height: 37
+    spriteID: 3ab88dd7c13e1ae43bd5be738cab7b48
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -152,20 +147,20 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 25, y: 26}
+    uvTransform: {x: -4, y: -12}
   - name: Frame_1
     originalName: 
-    pivot: {x: 0.5, y: -0.53333336}
+    pivot: {x: 0.58536583, y: -0.53333336}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
     rect:
       serializedVersion: 2
-      x: 4
+      x: 47
       y: 4
-      width: 30
+      width: 41
       height: 30
-    spriteID: b355dd92e5a04fd44a05389dc54a1a27
+    spriteID: e3cd3ca67d057ee4183ad0a028f5fcc6
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -173,20 +168,20 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: -13, y: -12}
+    uvTransform: {x: 39, y: -12}
   - name: Frame_2
     originalName: 
-    pivot: {x: 0.5, y: -0.7666667}
+    pivot: {x: 0.45000002, y: -0.53333336}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
     rect:
       serializedVersion: 2
-      x: 4
+      x: 47
       y: 42
-      width: 30
+      width: 40
       height: 30
-    spriteID: 275c27d47f29c7746bf62e8ddce776fd
+    spriteID: 72bdeec526bf76f4eacf441260915ff6
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -194,41 +189,20 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: -13, y: 19}
+    uvTransform: {x: 33, y: 26}
   - name: Frame_3
     originalName: 
-    pivot: {x: 0.5, y: -0.6}
+    pivot: {x: 0.5555556, y: -0.53333336}
     alignment: 9
     border: {x: 0, y: 0, z: 0, w: 0}
     customData: 
     rect:
       serializedVersion: 2
-      x: 4
-      y: 80
-      width: 30
-      height: 30
-    spriteID: e4483a8aaa9d30c48b6770d67f3955e8
-    spriteBone: []
-    spriteOutline: []
-    vertices: []
-    spritePhysicsOutline: []
-    indices: 
-    edges: []
-    tessellationDetail: 0
-    uvTransform: {x: -13, y: 62}
-  - name: Frame_4
-    originalName: 
-    pivot: {x: 0.5, y: -0.53333336}
-    alignment: 9
-    border: {x: 0, y: 0, z: 0, w: 0}
-    customData: 
-    rect:
-      serializedVersion: 2
-      x: 42
+      x: 96
       y: 4
-      width: 30
+      width: 27
       height: 30
-    spriteID: 79bfa7b92dc900348ba3c1f3cbe870b1
+    spriteID: 3f416d6865ccb5c4e94d561b0f430201
     spriteBone: []
     spriteOutline: []
     vertices: []
@@ -236,18 +210,18 @@ ScriptedImporter:
     indices: 
     edges: []
     tessellationDetail: 0
-    uvTransform: {x: 25, y: -12}
+    uvTransform: {x: 79, y: -12}
   spriteSheetImportData: []
   tileSetImportData: []
   asepriteLayers:
   - layerIndex: 0
     uuid:
-      value0: 428560096
+      value0: 4068715618
       value1: 0
       value2: 0
       value3: 0
     guid: 0
-    name: capy-jump
+    name: capy-fight
     layerFlags: 0
     layerType: 0
     blendMode: 0
@@ -260,7 +234,7 @@ ScriptedImporter:
         y: 0
         width: 64
         height: 64
-      spriteId: 9983b2b28a36310409381d4aeebc7cd4
+      spriteId: 3ab88dd7c13e1ae43bd5be738cab7b48
     - name: Frame_1
       frameIndex: 1
       additiveSortOrder: 0
@@ -269,7 +243,7 @@ ScriptedImporter:
         y: 0
         width: 64
         height: 64
-      spriteId: b355dd92e5a04fd44a05389dc54a1a27
+      spriteId: e3cd3ca67d057ee4183ad0a028f5fcc6
     - name: Frame_2
       frameIndex: 2
       additiveSortOrder: 0
@@ -278,7 +252,7 @@ ScriptedImporter:
         y: 0
         width: 64
         height: 64
-      spriteId: 275c27d47f29c7746bf62e8ddce776fd
+      spriteId: 72bdeec526bf76f4eacf441260915ff6
     - name: Frame_3
       frameIndex: 3
       additiveSortOrder: 0
@@ -287,46 +261,13 @@ ScriptedImporter:
         y: 0
         width: 64
         height: 64
-      spriteId: e4483a8aaa9d30c48b6770d67f3955e8
-    - name: Frame_4
-      frameIndex: 4
-      additiveSortOrder: 0
-      cellRect:
-        x: 0
-        y: 0
-        width: 64
-        height: 64
-      spriteId: 79bfa7b92dc900348ba3c1f3cbe870b1
+      spriteId: 3f416d6865ccb5c4e94d561b0f430201
     linkedCells: []
     tileCells: []
     tileSetIndex: 0
     parentIndex: -1
   tileSets: []
-  platformSettings:
-  - name: DefaultTexturePlatform
-    overridden: 0
-    ignorePlatformSupport: 0
-    maxTextureSize: 16384
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 0
-    compressionQuality: 50
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    androidETC2FallbackOverride: 0
-  - name: Standalone
-    overridden: 0
-    ignorePlatformSupport: 0
-    maxTextureSize: 16384
-    resizeAlgorithm: 0
-    textureFormat: -1
-    textureCompression: 0
-    compressionQuality: 50
-    forceMaximumCompressionQuality_BC6H_BC7: 0
-    crunchedCompression: 0
-    allowsAlphaSplitting: 0
-    androidETC2FallbackOverride: 0
+  platformSettings: []
   generatePhysicsShape: 0
   secondarySpriteTextures: []
   spritePackingTag: 
