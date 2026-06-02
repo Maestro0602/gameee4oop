@@ -1,78 +1,123 @@
-# Random Enemies and Boss from the Codebase
+# Architecture Overview: Health, UI, and Economy Systems
 
-Based on the codebase analysis, here's a breakdown of 3 enemies and 1 boss found in the scripts, along with AI image generation prompts to bring them to life!
+## 1. Player HP System
+The player's health is strictly tracked in the `PlayerData` singleton (which acts as the single source of truth for save data), while the `HeroController` handles the game logic, physics, and states when taking damage.
 
-## 1. Crawler (Enemy)
-**Code Context (`Crawler.cs`):** 
-This is a standard crawling enemy that patrols by continuously moving across flat surfaces. The script controls movement handling components (`IsCrawling`, `Speed`) and tracks when the crawling minion pivots at edges or walls (`IsTurning`).
 ```csharp
-public bool IsTurning { get; private set; }
-public bool IsCrawling {
-    get { return this.crawlRoutine != null; }
+// Inside HeroController.cs
+public void TakeHealth(int amount)
+{
+    // 1. Tell PlayerData to reduce the actual health/blue health values
+    this.playerData.TakeHealth(amount, this.IsInLifebloodState, true);
+
+    // 2. Play animations, give invulnerability, handle hitstop, etc.
+    this.HeroDamaged(); 
+}
+
+public void AddHealth(int amount)
+{
+    this.playerData.AddHealth(amount);
+
+    // Broadcast event across the game to update UI and logic
+    EventRegister.SendEvent(EventRegisterEvents.HeroHealed, null); 
 }
 ```
-**Image Generation Prompt:**
-> A 2D hand-drawn digital art style illustration of a creepy, multi-legged bug crawling along a dark, moody stone wall. Dark fantasy insectoid creature, glowing white eyes, sharp chitin plating, desolate underground cave background, cool blue and black color palette, Hollow Knight aesthetic.
 
-## 2. Tiny Moss Fly (Enemy)
-**Code Context (`TinyMossFly.cs`):** 
-A small flying insect found hovering around. The code controls a `Buzz` function that utilizes a dynamic mix of `accelerationMax` and `dampener` to simulate real, erratic fly movement. It also features a unique `songMode` where it vibrates in place to a beat.
+## 2. Enemy/Mob HP System (HealthManager)
+Enemies don't use `HeroController`. Instead, they have a component attached to their root object called `HealthManager`. The player's hitboxes (`DamageEnemies.cs` or `NailSlash.cs`) create a `HitInstance` struct containing damage info, which is passed to the enemy's `HealthManager`.
+
 ```csharp
-protected void FixedUpdate() {
-    float deltaTime = Time.deltaTime;
-    if (!this.flyingAway && !this.songMode) {
-        this.Buzz(deltaTime);
-    }
-    if (this.songMode) {
-        // Vibrates in place when in song mode
-        Vector3 vector = new Vector3(this.startX + Random.Range(-0.06f, 0.06f), this.startY + Random.Range(-0.06f, 0.06f), base.transform.position.z);
-        base.transform.position = vector;
-    }
-}
-```
-**Image Generation Prompt:**
-> A cute, tiny flying insect entirely covered in lush green moss. Highly detailed 2D indie game art style, glowing particles surrounding it. The creature is hovering softly in a vibrant, overgrown greenhouse setting. Magical and atmospheric lighting, soft greens and yellows.
-
-## 3. Jelly Egg (Enemy/Hazard)
-**Code Context (`JellyEgg.cs`):** 
-This behaves like an environmental creature (similar to an Ooma). When prompted by a direct attack (like a "Nail Attack" or "Hero Spell"), it triggers a `Burst()`. If it's the explosive variant (`this.bomb = true`), it spawns a deadly localized explosion.
-```csharp
-private void OnTriggerEnter2D(Collider2D otherCollider) {
-    if (otherCollider.gameObject.tag == "Nail Attack" || otherCollider.gameObject.tag == "Hero Spell" || otherCollider.gameObject.tag == "HeroBox") {
-        this.Burst();
-    }
-}
-
-private void Burst() {
-    // ...
-    if (this.bomb) {
-        this.explosionObject.Spawn(base.transform.position, base.transform.localRotation);
+// Example of how the Hero interacts with Mob Health
+public void NailHitEnemy(HealthManager enemyHealth, HitInstance hitInstance)
+{
+    // Ignore hits if the enemy is invincible or matches specific flags
+    if (enemyHealth.ShouldIgnore(HealthManager.IgnoreFlags.RageHeal))
         return;
-    }
-    // ...
+
+    // HealthManager internally does: 
+    // this.hp -= hitInstance.DamageAmount;
+    // if (this.hp <= 0) this.Die();
+
+    // Hero logic gets notified to give rewards upon hitting the mob:
+    this.hunterUpgState.CurrentMeterHits++;
 }
 ```
-**Image Generation Prompt:**
-> A translucent, floating jellyfish-like egg sac. Inside the gelatinous membrane is a dense, glowing orange, fiery core ready to detonate. Deep sea mixed with underground cavern environment, glowing bioluminescence, 2D platformer art style, crisp outlines, mysterious and dangerous atmosphere.
 
-## 4. Hive Knight (Boss)
-**Code Context (`HiveKnightStinger.cs`):** 
-This script operates the stinger projectiles shot by the Hive Knight boss. Using trigonometric math (`Mathf.Cos` and `Mathf.Sin`), it calculates a straight linear velocity along a set direction based on a high baseline `speed`. A timer is set to 2 seconds before the projectile disappears.
+## 3. The UI Connection (Event Driven)
+Rather than the `HeroController` talking directly to the `UIManager` or Health UI, this codebase uses an **Event-Driven Architecture** (`EventRegister`). This decouples the game logic from the visual UI layer.
+
 ```csharp
-private void Update() {
-    float num = this.speed * Mathf.Cos(this.direction * 0.017453292f); // math to calculate trajectory X 
-    float num2 = this.speed * Mathf.Sin(this.direction * 0.017453292f); // math to calculate trajectory Y
-    Vector2 vector;
-    vector.x = num;
-    vector.y = num2;
-    this.rb.linearVelocity = vector; // Apply trajectory
+// Inside HeroController.cs Taking Damage
+private void DoSpecialDamage(int damageAmount, ...)
+{
+    this.playerData.TakeHealth(damageAmount, this.IsInLifebloodState, canDie);
 
-    if (this.timer > 0f) {
-        this.timer -= Time.deltaTime;
-        return;
+    // Broadcasts an event out to all listeners. 
+    // The UIManager and graphical GameCameras listen to this to shatter health masks on screen.
+    EventRegister.SendEvent(EventRegisterEvents.HealthUpdate, null);
+
+    if (this.playerData.health == 0)
+    {
+        // Broadcasts Death to the UI and Game Manager
+        EventRegister.SendEvent(EventRegisterEvents.HeroDeath, null);
     }
-    base.gameObject.SetActive(false); // Disappears after timer expires
 }
 ```
-**Image Generation Prompt:**
-> An imposing, royal anthropomorphic bee knight wearing heavily armored golden chitin. He is wielding a rapier shaped like a giant stinger, aggressively lunging forward. Honeycomb patterns in the background, glowing amber and gold lighting, dynamic action pose, 2D metroidvania boss fight style.
+
+## 4. Money System (Geo & Shards)
+Money uses the heavily abstracted `CurrencyManager` class which handles the different types of currencies (like Geo or Shards), triggers the UI counters on screen, and updates the `PlayerData`.
+
+```csharp
+// Wrappers inside HeroController.cs that talk to the CurrencyManager
+public void AddCurrency(int amount, CurrencyType type, bool showCounter = true)
+{
+    // Adds Geo/Shards to PlayerData and tells the UI to pop up the counter
+    CurrencyManager.ChangeCurrency(amount, type, showCounter);
+}
+
+public void TakeGeo(int amount)
+{
+    CurrencyManager.TakeGeo(amount);
+}
+
+public int GetCurrencyAmount(CurrencyType type)
+{
+    // Checks how much money the player has right now
+    return CurrencyManager.GetCurrencyAmount(type);
+}
+```
+
+## 5. Shop System (Conceptual)
+The shop components query the `CurrencyManager` we saw above to verify if a player can afford an item. If so, it subtracts the funds and unlocks the item in `PlayerData`.
+
+```csharp
+// A typical ShopMenu implementation interacting with the systems above
+public class ShopMenu : MonoBehaviour
+{
+    public void TryBuyItem(ShopItem item)
+    {
+        // 1. Check if the player has enough currency
+        if (CurrencyManager.GetCurrencyAmount(item.currencyType) >= item.cost)
+        {
+            // 2. Take the money (updates UI automatically)
+            CurrencyManager.ChangeCurrency(-item.cost, item.currencyType, true);
+
+            // 3. Give the player the item in PlayerData
+            PlayerData.instance.SetBool(item.playerDataBoolName, true);
+
+            // 4. Optionally heal/reward the player
+            if (item.isHealthUpgrade)
+            {
+               HeroController.instance.AddToMaxHealth(1);
+            }
+
+            PlayPurchaseAudio();
+        }
+        else 
+        {
+            // Not enough money
+            PlayRejectAudio(); 
+        }
+    }
+}
+```
