@@ -31,11 +31,45 @@ public class DamageReference : ScriptableObject
 
 public class HealthManager : MonoBehaviour
 {
+    public int currentHP = 10;
+    private Rigidbody2D rb;
+
     public event Action TookDamage;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+    }
 
     public void RaiseTookDamage()
     {
         TookDamage?.Invoke();
+    }
+
+    public void TakeHit(HitInstance hit)
+    {
+        currentHP -= hit.DamageAmount;
+
+        if (rb != null)
+        {
+            Vector2 knockbackDir = new Vector2(
+                Mathf.Cos(hit.DirectionAngle * Mathf.Deg2Rad), 
+                Mathf.Sin(hit.DirectionAngle * Mathf.Deg2Rad)
+            );
+            rb.linearVelocity = knockbackDir * hit.KnockbackForce;
+        }
+
+        RaiseTookDamage();
+
+        if (currentHP <= 0)
+        {
+            Die();
+        }
+    }
+
+    private void Die()
+    {
+        Destroy(gameObject);
     }
 }
 
