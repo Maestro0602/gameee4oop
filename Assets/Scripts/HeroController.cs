@@ -17,8 +17,6 @@ public class HeroController : MonoBehaviour
 
     [Header("Movement - Jump")]
     [SerializeField] private float JUMP_SPEED = 16.5f;
-    [SerializeField] private int JUMP_STEPS = 16;
-    [SerializeField] private int JUMP_STEPS_MIN = 4;
 
     [Header("Movement - Double Jump")]
     [SerializeField] private bool canDoubleJump = false;
@@ -27,10 +25,6 @@ public class HeroController : MonoBehaviour
     [Header("Movement - Dash")]
     [SerializeField] private float DASH_SPEED = 20f;
     [SerializeField] private float DASH_DISTANCE = 6f;
-    [SerializeField] private float DASH_TIME = 0.3f;
-    [SerializeField] private float AIR_DASH_TIME = 0.3f;
-    [SerializeField] private float DOWN_DASH_TIME = 0.2f;
-    [SerializeField] private int DASH_QUEUE_STEPS = 5;
     [SerializeField] private float DASH_COOLDOWN = 0.6f;
 
     [Header("Movement - Wall")]
@@ -42,20 +36,22 @@ public class HeroController : MonoBehaviour
     [SerializeField] private float WALLCLING_COOLDOWN = 0.5f;
 
     [Header("Movement - Gravity")]
+    [Tooltip("Gravity applied while falling or at apex with no input.")]
     [SerializeField] private float DEFAULT_GRAVITY = 2.5f;
+    [Tooltip("Reduced gravity while ascending (gives floaty apex feel).")]
     [SerializeField] private float AIR_HANG_GRAVITY = 1.2f;
+    [Tooltip("How much to multiply gravity when falling fast (snappier landing).")]
+    [SerializeField] private float FALL_GRAVITY_MULTIPLIER = 1.5f;
     [SerializeField] private float MAX_FALL_VELOCITY = 20f;
     [SerializeField] private float MAX_FALL_VELOCITY_DJUMP = 15f;
+    [Tooltip("How much to cut vertical speed when jump button is released early.")]
+    [SerializeField] private float JUMP_CUT_MULTIPLIER = 0.5f;
 
-    // Internal State Variables
-    private int jump_steps;
-    private int jumped_steps;
-    private int doubleJump_steps;
+    // Internal State
     private bool doubleJumped;
     private bool airDashed;
     private bool wasOnGround;
-    private float dash_timer;
-    private float dash_time;
+    private bool isDoubleJumping;     // track if last jump was a double jump (affects fall cap)
 
     [Header("References")]
     [Tooltip("Place this Transform at the character's hand/sword tip in the scene.")]
@@ -107,7 +103,6 @@ public class HeroController : MonoBehaviour
     private Collider2D selfCollider;
     private readonly Collider2D[] groundHits = new Collider2D[4];
 
-    // Attack timers — driven by attackData values at runtime
     private float timeSinceLastAttack;
     private float attackCooldownTimer;
 
@@ -127,6 +122,12 @@ public class HeroController : MonoBehaviour
     public Rigidbody2D Body => rb2d;
 
     // -------------------------------------------------------
+    // Jump state — replaces the old JUMP_STEPS system
+    // -------------------------------------------------------
+    private bool isJumping;           // true from jump initiation until apex or button release
+    private bool jumpButtonHeld;      // tracks whether space is still held this jump
+
+    // -------------------------------------------------------
     // Unity Messages
     // -------------------------------------------------------
 
@@ -134,12 +135,15 @@ public class HeroController : MonoBehaviour
     {
         if (instance != null && instance != this)
         {
-            UnityEngine.Object.Destroy(gameObject);
+            Destroy(gameObject);
             return;
         }
         instance = this;
         rb2d = GetComponent<Rigidbody2D>();
         selfCollider = GetComponent<Collider2D>();
+
+        // CRITICAL: disable Unity's built-in gravity so we control it fully
+        rb2d.gravityScale = 0f;
 
         if (cState == null) cState = new HeroControllerStates();
 
@@ -190,6 +194,9 @@ public class HeroController : MonoBehaviour
         if (ReadJumpInput()) jumpQueued = true;
         if (ReadDashInput()) dashQueued = true;
 
+        // Track whether the jump button is still held (for variable height)
+        if (!ReadJumpInputHeld()) jumpButtonHeld = false;
+
         if (dashCooldownTimer > 0) dashCooldownTimer -= Time.deltaTime;
         if (dashDurationTimer > 0) dashDurationTimer -= Time.deltaTime;
         if (jumpCooldownTimer > 0) jumpCooldownTimer -= Time.deltaTime;
@@ -218,6 +225,7 @@ public class HeroController : MonoBehaviour
         if (cState.onGround && !wasOnGround) ResetMoveState();
         wasOnGround = cState.onGround;
 
+        // --- Jump input ---
         if (jumpQueued)
         {
             if (cState.onGround && jumpCooldownTimer <= 0f)
@@ -227,6 +235,21 @@ public class HeroController : MonoBehaviour
             jumpQueued = false;
         }
 
+        // --- Variable jump cut ---
+        // If the player releases the jump button while still rising, cut velocity
+        if (isJumping && !jumpButtonHeld && rb2d.linearVelocity.y > 0f)
+        {
+            Vector2 v = rb2d.linearVelocity;
+            v.y *= JUMP_CUT_MULTIPLIER;
+            rb2d.linearVelocity = v;
+            isJumping = false;
+        }
+
+        // Clear jumping flag at apex
+        if (isJumping && rb2d.linearVelocity.y <= 0f)
+            isJumping = false;
+
+        // --- Dash ---
         if (dashQueued && !cState.dashing && dashCooldownTimer <= 0)
         {
             if (cState.onGround || (!cState.onGround && !airDashed))
@@ -234,6 +257,7 @@ public class HeroController : MonoBehaviour
             dashQueued = false;
         }
 
+        // --- Dash movement ---
         if (cState.dashing)
         {
             if (dashDurationTimer <= 0)
@@ -244,28 +268,51 @@ public class HeroController : MonoBehaviour
         else
         {
             Move(move_input, true);
+            ApplyCustomGravity();
         }
 
-        if (cState.jumping && !cState.onGround)
+        // --- Clamp fall speed ---
+        ClampFallVelocity();
+    }
+
+    // -------------------------------------------------------
+    // Custom Gravity  ← THE FIX
+    // -------------------------------------------------------
+
+    private void ApplyCustomGravity()
+    {
+        // No gravity needed while grounded
+        if (cState.onGround && rb2d.linearVelocity.y <= 0f) return;
+
+        float gravityToUse;
+
+        if (rb2d.linearVelocity.y > 0f && isJumping && jumpButtonHeld)
         {
-            jump_steps++;
-            if (ReadJumpInputHeld() || jump_steps < JUMP_STEPS_MIN)
-            {
-                if (jump_steps <= JUMP_STEPS)
-                {
-                    Vector2 v = rb2d.linearVelocity;
-                    v.y = JUMP_SPEED;
-                    rb2d.linearVelocity = v;
-                }
-                else CancelJump();
-            }
-            else JumpReleased();
+            // Ascending with button held → lighter gravity (floaty apex)
+            gravityToUse = AIR_HANG_GRAVITY;
+        }
+        else if (rb2d.linearVelocity.y < 0f)
+        {
+            // Falling → heavier gravity (snappier landing feel)
+            gravityToUse = DEFAULT_GRAVITY * FALL_GRAVITY_MULTIPLIER;
+        }
+        else
+        {
+            // Ascending but button released, or at apex
+            gravityToUse = DEFAULT_GRAVITY;
         }
 
+        // Apply as a downward acceleration (units/s² scaled by Physics2D gravity magnitude)
+        rb2d.linearVelocity += Vector2.down * gravityToUse * Mathf.Abs(Physics2D.gravity.y) * Time.fixedDeltaTime;
+    }
+
+    private void ClampFallVelocity()
+    {
         Vector2 vel = rb2d.linearVelocity;
-        if (vel.y < -MAX_FALL_VELOCITY)
+        float cap = isDoubleJumping ? MAX_FALL_VELOCITY_DJUMP : MAX_FALL_VELOCITY;
+        if (vel.y < -cap)
         {
-            vel.y = -MAX_FALL_VELOCITY;
+            vel.y = -cap;
             rb2d.linearVelocity = vel;
         }
     }
@@ -351,6 +398,8 @@ public class HeroController : MonoBehaviour
         cState.doubleJumping = false;
         doubleJumped = false;
         airDashed = false;
+        isJumping = false;
+        isDoubleJumping = false;
         cState.jumping = false;
         JUMPS_LEFT = 1;
     }
@@ -358,10 +407,7 @@ public class HeroController : MonoBehaviour
     private void UpdateGroundState()
     {
         if (cState.onGround)
-        {
             SetState(ActorStates.grounded);
-            jump_steps = 0;
-        }
     }
 
     // -------------------------------------------------------
@@ -372,7 +418,6 @@ public class HeroController : MonoBehaviour
 
     private void DoAttack()
     {
-        // Read cooldown from SO if available, fallback to 0.25f
         float cooldown = attackData != null ? attackData.attackCooldown : 0.25f;
         if (attackCooldownTimer > 0f) return;
 
@@ -401,7 +446,6 @@ public class HeroController : MonoBehaviour
 
         TrySetCorrectFacing();
 
-        // Combo window read from SO
         float comboWindow = attackData != null ? attackData.comboTimeWindow : 0.5f;
         if (timeSinceLastAttack <= comboWindow)
             cState.altAttack = !cState.altAttack;
@@ -453,11 +497,9 @@ public class HeroController : MonoBehaviour
     }
 
     private bool IsInSpikeRecovery() => cState.downSpikeRecovery && cState.onGround;
-    private bool IsBlockedBySlopeLeft(float moveDirection) => cState.isTouchingSlopeLeft && moveDirection < 0f;
-    private bool IsBlockedBySlopeRight(float moveDirection) => cState.isTouchingSlopeRight && moveDirection > 0f;
-
-    private float GetCurrentSpeed() =>
-        (cState.inWalkZone && cState.onGround) ? WALK_SPEED : RUN_SPEED;
+    private bool IsBlockedBySlopeLeft(float d) => cState.isTouchingSlopeLeft && d < 0f;
+    private bool IsBlockedBySlopeRight(float d) => cState.isTouchingSlopeRight && d > 0f;
+    private float GetCurrentSpeed() => (cState.inWalkZone && cState.onGround) ? WALK_SPEED : RUN_SPEED;
 
     public void AddExtraAirMoveVelocity(DecayingVelocity velocity) =>
         extraAirMoveVelocities.Add(velocity);
@@ -492,37 +534,31 @@ public class HeroController : MonoBehaviour
 
     public void Jump()
     {
-        jump_steps = 0;
+        isJumping = true;
+        isDoubleJumping = false;
+        jumpButtonHeld = true;
         cState.jumping = true;
         jumpCooldownTimer = 0.2f;
+
         if (anim != null) anim.SetTrigger(hashJump);
+
+        // Single impulse — gravity handles the arc from here
         Vector2 v = rb2d.linearVelocity;
         v.y = JUMP_SPEED;
         rb2d.linearVelocity = v;
     }
 
-    private void JumpReleased()
-    {
-        if (cState.jumping)
-        {
-            if (jump_steps >= JUMP_STEPS_MIN && rb2d.linearVelocity.y > 0)
-            {
-                Vector2 v = rb2d.linearVelocity;
-                v.y *= 0.5f;
-                rb2d.linearVelocity = v;
-            }
-            CancelJump();
-        }
-    }
-
-    private void CancelJump() => cState.jumping = false;
-
     public void DoubleJump()
     {
+        isJumping = true;
+        isDoubleJumping = true;
+        jumpButtonHeld = true;
         cState.doubleJumping = true;
         doubleJumped = true;
         JUMPS_LEFT--;
+
         if (anim != null) anim.SetTrigger(hashDoubleJump);
+
         Vector2 v = rb2d.linearVelocity;
         v.y = doubleJumpSpeed;
         rb2d.linearVelocity = v;
@@ -534,6 +570,7 @@ public class HeroController : MonoBehaviour
         dashDurationTimer = DASH_DISTANCE / DASH_SPEED;
         dashCooldownTimer = DASH_COOLDOWN;
         if (!cState.onGround) airDashed = true;
+
         Vector2 v = rb2d.linearVelocity;
         v.y = 0f;
         v.x = FacingDirection * DASH_SPEED;
@@ -601,7 +638,6 @@ public class HeroController : MonoBehaviour
             }
         }
 
-        // Draw attackOrigin position in scene for easy placement
         if (attackOrigin != null)
         {
             Gizmos.color = Color.cyan;
