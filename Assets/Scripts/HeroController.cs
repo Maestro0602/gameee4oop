@@ -160,6 +160,10 @@ public class HeroController : MonoBehaviour
         hashDoubleJump = Animator.StringToHash(animDoubleJump);
 
         JUMPS_LEFT = 0;
+
+        selfCollider = GetComponent<Collider2D>();
+        anim = GetComponent<Animator>();
+        SpriteRenderer spriteRenderer = GetComponentInChildren<SpriteRenderer>();
     }
 
     private bool jumpQueued;
@@ -212,8 +216,10 @@ public class HeroController : MonoBehaviour
     private void UpdateAnimations()
     {
         if (anim == null) return;
+        bool isMoving = Mathf.Abs(move_input) > 0.05f;
+
+        anim.SetBool("isRunning", isMoving);
         anim.SetBool(hashGrounded, cState.onGround);
-        anim.SetFloat(hashXVelocity, Mathf.Abs(rb2d.linearVelocity.x));
         anim.SetFloat(hashYVelocity, rb2d.linearVelocity.y);
         anim.SetBool(hashDashing, cState.dashing);
     }
@@ -228,6 +234,7 @@ public class HeroController : MonoBehaviour
         // --- Jump input ---
         if (jumpQueued)
         {
+            Debug.Log($"jumpQueued fired! onGround={cState.onGround}, cooldown={jumpCooldownTimer}");
             if (cState.onGround && jumpCooldownTimer <= 0f)
                 Jump();
             else if (!cState.onGround && JUMPS_LEFT > 0 && canDoubleJump)
@@ -401,6 +408,9 @@ public class HeroController : MonoBehaviour
         isJumping = false;
         isDoubleJumping = false;
         cState.jumping = false;
+        // FIX 5: Grant the midair jump budget here, on landing — not inside Jump().
+        // Setting it inside Jump() gave the player a free double jump the instant they
+        // left the ground, before they were even considered airborne.
         JUMPS_LEFT = 1;
     }
 
@@ -476,6 +486,8 @@ public class HeroController : MonoBehaviour
         float cooldown = attackData != null ? attackData.attackCooldown : 0.25f;
         attackCooldownTimer = cooldown;
         Invoke(nameof(EndAttack), 0.15f);
+
+        AudioManager.instance.PlaySFX(AudioManager.instance.fighting);
     }
 
     private void EndAttack()
@@ -546,6 +558,8 @@ public class HeroController : MonoBehaviour
         Vector2 v = rb2d.linearVelocity;
         v.y = JUMP_SPEED;
         rb2d.linearVelocity = v;
+
+        AudioManager.instance.PlaySFX(AudioManager.instance.jumping);
     }
 
     public void DoubleJump()
@@ -575,6 +589,8 @@ public class HeroController : MonoBehaviour
         v.y = 0f;
         v.x = FacingDirection * DASH_SPEED;
         rb2d.linearVelocity = v;
+
+        AudioManager.instance.SFXSource.PlayOneShot(AudioManager.instance.dashing, 0.2f);
     }
 
     private void EndDash()
@@ -690,7 +706,7 @@ public class HeroController : MonoBehaviour
 #if ENABLE_LEGACY_INPUT_MANAGER
         return Input.GetAxisRaw("Horizontal");
 #else
-        return 0f;
+        return Input.GetAxisRaw("Horizontal");
 #endif
     }
 
@@ -722,7 +738,7 @@ public class HeroController : MonoBehaviour
 #if ENABLE_LEGACY_INPUT_MANAGER
         return Input.GetAxisRaw("Vertical");
 #else
-        return 0f;
+        return Input.GetAxisRaw("Vertical");
 #endif
     }
 
@@ -731,9 +747,9 @@ public class HeroController : MonoBehaviour
 #if ENABLE_INPUT_SYSTEM
         return Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame;
 #elif ENABLE_LEGACY_INPUT_MANAGER
-        return Input.GetButtonDown("Jump");
+        return Input.GetButtonDown("Jump") || Input.GetKeyDown(KeyCode.Space);
 #else
-        return false;
+        return Input.GetKeyDown(KeyCode.Space) || Input.GetButtonDown("Jump");
 #endif
     }
 
@@ -742,9 +758,9 @@ public class HeroController : MonoBehaviour
 #if ENABLE_INPUT_SYSTEM
         return Keyboard.current != null && Keyboard.current.spaceKey.isPressed;
 #elif ENABLE_LEGACY_INPUT_MANAGER
-        return Input.GetButton("Jump");
+        return Input.GetButton("Jump") || Input.GetKey(KeyCode.Space);
 #else
-        return false;
+        return Input.GetKey(KeyCode.Space) || Input.GetButton("Jump");
 #endif
     }
 
@@ -756,9 +772,9 @@ public class HeroController : MonoBehaviour
                 Keyboard.current.cKey.wasPressedThisFrame ||
                 Keyboard.current.kKey.wasPressedThisFrame);
 #elif ENABLE_LEGACY_INPUT_MANAGER
-        return Input.GetButtonDown("Fire3") || Input.GetKeyDown(KeyCode.K);
+        return Input.GetButtonDown("Fire3") || Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.LeftShift);
 #else
-        return false;
+        return Input.GetKeyDown(KeyCode.K) || Input.GetKeyDown(KeyCode.C) || Input.GetKeyDown(KeyCode.LeftShift);
 #endif
     }
 
