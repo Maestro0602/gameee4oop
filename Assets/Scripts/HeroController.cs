@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using GlobalEnums;
@@ -19,11 +19,11 @@ public class HeroController : MonoBehaviour
     [SerializeField] private float WALK_SPEED = 6f;
 
     [Header("Movement - Jump")]
-    [SerializeField] private float JUMP_SPEED = 16.5f;
+    [SerializeField] private float JUMP_SPEED = 18.5f;
 
     [Header("Movement - Double Jump")]
     [SerializeField] private bool canDoubleJump = false;
-    [SerializeField] private float doubleJumpSpeed = 18f;
+    [SerializeField] private float doubleJumpSpeed = 20f;
 
     [Header("Movement - Dash")]
     [SerializeField] private float DASH_SPEED = 20f;
@@ -37,24 +37,49 @@ public class HeroController : MonoBehaviour
     [SerializeField] private float WALLSLIDE_STICK_TIME = 0.2f;
     [SerializeField] private float WALLCLING_DECEL = 0.5f;
     [SerializeField] private float WALLCLING_COOLDOWN = 0.5f;
+    [Tooltip("Max fall speed while wall-sliding.")]
+    [SerializeField] private float WALLSLIDE_SPEED = 3f;
+    [Tooltip("Vertical speed applied during wall-jump.")]
+    [SerializeField] private float WJ_JUMP_SPEED = 17f;
+    [Tooltip("Brief input lockout after wall-jump (seconds).")]
+    [SerializeField] private float WJ_INPUT_LOCKOUT = 0.15f;
+
+    [Header("Movement - Smoothing")]
+    [SerializeField] private float GROUND_ACCEL = 60f;
+    [SerializeField] private float GROUND_DECEL = 45f;
+    [SerializeField] private float AIR_ACCEL = 30f;
+    [SerializeField] private float AIR_DECEL = 18f;
+
+    [Header("Movement - Assist")]
+    [Tooltip("Grace period after leaving ground where jump still works.")]
+    [SerializeField] private float COYOTE_TIME = 0.1f;
+    [Tooltip("How long a jump press is remembered before landing.")]
+    [SerializeField] private float JUMP_BUFFER_TIME = 0.12f;
 
     [Header("Movement - Gravity")]
     [Tooltip("Gravity applied while falling or at apex with no input.")]
-    [SerializeField] private float DEFAULT_GRAVITY = 2.5f;
-    [Tooltip("Reduced gravity while ascending (gives floaty apex feel).")]
-    [SerializeField] private float AIR_HANG_GRAVITY = 1.2f;
-    [Tooltip("How much to multiply gravity when falling fast (snappier landing).")]
-    [SerializeField] private float FALL_GRAVITY_MULTIPLIER = 1.5f;
+    [SerializeField] private float DEFAULT_GRAVITY = 3.2f;
+    [Tooltip("Reduced gravity while ascending with jump held.")]
+    [SerializeField] private float AIR_HANG_GRAVITY = 2.6f;
+    [Tooltip("How much to multiply gravity when falling (snappier landing).")]
+    [SerializeField] private float FALL_GRAVITY_MULTIPLIER = 1.2f;
     [SerializeField] private float MAX_FALL_VELOCITY = 20f;
     [SerializeField] private float MAX_FALL_VELOCITY_DJUMP = 15f;
     [Tooltip("How much to cut vertical speed when jump button is released early.")]
-    [SerializeField] private float JUMP_CUT_MULTIPLIER = 0.5f;
+    [SerializeField] private float JUMP_CUT_MULTIPLIER = 0.6f;
 
     // Internal State
     private bool doubleJumped;
     private bool airDashed;
     private bool wasOnGround;
     private bool isDoubleJumping;     // track if last jump was a double jump (affects fall cap)
+
+    // Wall & assist state
+    private float coyoteTimer;
+    private float jumpBufferTimer;
+    private float wallJumpLockoutTimer;
+    private int wallDirection;           // -1 = wall on left, 1 = wall on right, 0 = no wall
+    private bool touchingWallThisFrame;
 
     [Header("References")]
     [Tooltip("Place this Transform at the character's hand/sword tip in the scene.")]
@@ -84,6 +109,7 @@ public class HeroController : MonoBehaviour
     [SerializeField] private string animAttackDir = "AttackDir";
     [SerializeField] private string animJump = "Jump";
     [SerializeField] private string animDoubleJump = "DoubleJump";
+    [SerializeField] private string animWallSlide = "isWallSliding";
 
     private int hashGrounded;
     private int hashXVelocity;
@@ -93,6 +119,7 @@ public class HeroController : MonoBehaviour
     private int hashAttackDir;
     private int hashJump;
     private int hashDoubleJump;
+    private int hashWallSlide;
 
     [Header("Look Config")]
     [SerializeField] private float lookDelay = 0.5f;
@@ -161,6 +188,7 @@ public class HeroController : MonoBehaviour
         hashAttackDir = Animator.StringToHash(animAttackDir);
         hashJump = Animator.StringToHash(animJump);
         hashDoubleJump = Animator.StringToHash(animDoubleJump);
+        hashWallSlide = Animator.StringToHash(animWallSlide);
 
         JUMPS_LEFT = 0;
 
@@ -203,7 +231,7 @@ public class HeroController : MonoBehaviour
             cState.lookingDown = vInput < -0.1f;
         }
 
-        if (ReadJumpInput()) jumpQueued = true;
+        if (ReadJumpInput()) jumpBufferTimer = JUMP_BUFFER_TIME;
         if (ReadDashInput()) dashQueued = true;
 
         // Track whether the jump button is still held (for variable height)
@@ -212,6 +240,8 @@ public class HeroController : MonoBehaviour
         if (dashCooldownTimer > 0) dashCooldownTimer -= Time.deltaTime;
         if (dashDurationTimer > 0) dashDurationTimer -= Time.deltaTime;
         if (jumpCooldownTimer > 0) jumpCooldownTimer -= Time.deltaTime;
+        if (jumpBufferTimer > 0) jumpBufferTimer -= Time.deltaTime;
+        if (wallJumpLockoutTimer > 0) wallJumpLockoutTimer -= Time.deltaTime;
 
         timeSinceLastAttack += Time.deltaTime;
         if (attackCooldownTimer > 0) attackCooldownTimer -= Time.deltaTime;
@@ -244,28 +274,46 @@ public class HeroController : MonoBehaviour
         anim.SetBool(hashGrounded, cState.onGround);
         anim.SetFloat(hashYVelocity, rb2d.linearVelocity.y);
         anim.SetBool(hashDashing, cState.dashing);
+        anim.SetBool(hashWallSlide, cState.wallSliding);
     }
 
     private void FixedUpdate()
     {
         CheckGround();
+        CheckWall();
+
+        // --- Coyote time ---
+        if (cState.onGround)
+            coyoteTimer = COYOTE_TIME;
+        else
+            coyoteTimer -= Time.fixedDeltaTime;
 
         if (cState.onGround && !wasOnGround) ResetMoveState();
         wasOnGround = cState.onGround;
 
-        // --- Jump input ---
-        if (jumpQueued)
+        // --- Jump input (with buffer + coyote) ---
+        bool wantsJump = jumpBufferTimer > 0f;
+        if (wantsJump)
         {
-            Debug.Log($"jumpQueued fired! onGround={cState.onGround}, cooldown={jumpCooldownTimer}");
-            if (cState.onGround && jumpCooldownTimer <= 0f)
+            if (cState.wallSliding)
+            {
+                WallJump();
+                jumpBufferTimer = 0f;
+            }
+            else if ((cState.onGround || coyoteTimer > 0f) && jumpCooldownTimer <= 0f)
+            {
                 Jump();
+                coyoteTimer = 0f;
+                jumpBufferTimer = 0f;
+            }
             else if (!cState.onGround && JUMPS_LEFT > 0 && canDoubleJump)
+            {
                 DoubleJump();
-            jumpQueued = false;
+                jumpBufferTimer = 0f;
+            }
         }
 
         // --- Variable jump cut ---
-        // If the player releases the jump button while still rising, cut velocity
         if (isJumping && !jumpButtonHeld && rb2d.linearVelocity.y > 0f)
         {
             Vector2 v = rb2d.linearVelocity;
@@ -278,11 +326,50 @@ public class HeroController : MonoBehaviour
         if (isJumping && rb2d.linearVelocity.y <= 0f)
             isJumping = false;
 
+        // --- Wall slide ---
+        if (touchingWallThisFrame && !cState.onGround && rb2d.linearVelocity.y <= 0f
+            && wallJumpLockoutTimer <= 0f)
+        {
+            // Player must hold input toward the wall
+            bool holdingTowardWall = (wallDirection == 1 && move_input > 0.1f)
+                                  || (wallDirection == -1 && move_input < -0.1f);
+            if (holdingTowardWall)
+            {
+                if (!cState.wallSliding)
+                {
+                    cState.wallSliding = true;
+                    cState.touchingWall = true;
+                    SetState(ActorStates.wall_sliding);
+                    // Reset double jump when grabbing a wall (Hollow Knight style)
+                    doubleJumped = false;
+                    JUMPS_LEFT = 1;
+                }
+                // Smoothly decelerate to wall slide speed
+                Vector2 v = rb2d.linearVelocity;
+                if (v.y < -WALLSLIDE_SPEED)
+                    v.y = Mathf.MoveTowards(v.y, -WALLSLIDE_SPEED,
+                        WALLSLIDE_ACCEL * Mathf.Abs(Physics2D.gravity.y) * Time.fixedDeltaTime);
+                rb2d.linearVelocity = v;
+            }
+            else
+            {
+                EndWallSlide();
+            }
+        }
+        else
+        {
+            if (cState.wallSliding)
+                EndWallSlide();
+        }
+
         // --- Dash ---
         if (dashQueued && !cState.dashing && dashCooldownTimer <= 0)
         {
             if (cState.onGround || (!cState.onGround && !airDashed))
+            {
+                if (cState.wallSliding) EndWallSlide();
                 Dash();
+            }
             dashQueued = false;
         }
 
@@ -297,7 +384,8 @@ public class HeroController : MonoBehaviour
         else
         {
             Move(move_input, true);
-            ApplyCustomGravity();
+            if (!cState.wallSliding)
+                ApplyCustomGravity();
         }
 
         // --- Clamp fall speed ---
@@ -392,14 +480,34 @@ public class HeroController : MonoBehaviour
         moveDirection = ApplyMovementBlocking(moveDirection);
 
         Vector2 velocity = rb2d.linearVelocity;
-        if (useInput && !cState.wallSliding)
-            velocity.x = moveDirection * GetCurrentSpeed();
+
+        // During wall-jump lockout, preserve the kickoff velocity
+        if (wallJumpLockoutTimer > 0f)
+        {
+            // Intentionally skip horizontal override
+        }
+        else if (useInput && !cState.wallSliding)
+        {
+            float targetSpeed = moveDirection * GetCurrentSpeed();
+            float accelRate;
+
+            if (cState.onGround)
+                accelRate = (Mathf.Abs(moveDirection) > 0.01f) ? GROUND_ACCEL : GROUND_DECEL;
+            else
+                accelRate = (Mathf.Abs(moveDirection) > 0.01f) ? AIR_ACCEL : AIR_DECEL;
+
+            velocity.x = Mathf.MoveTowards(velocity.x, targetSpeed, accelRate * Time.fixedDeltaTime);
+        }
 
         velocity = ApplyExtraVelocities(velocity);
         rb2d.linearVelocity = velocity;
 
-        if (moveDirection > 0.01f) FacingDirection = 1;
-        else if (moveDirection < -0.01f) FacingDirection = -1;
+        // Don't flip facing during wall jump lockout
+        if (wallJumpLockoutTimer <= 0f)
+        {
+            if (moveDirection > 0.01f) FacingDirection = 1;
+            else if (moveDirection < -0.01f) FacingDirection = -1;
+        }
 
         TrySetCorrectFacing();
     }
@@ -430,9 +538,9 @@ public class HeroController : MonoBehaviour
         isJumping = false;
         isDoubleJumping = false;
         cState.jumping = false;
-        // FIX 5: Grant the midair jump budget here, on landing — not inside Jump().
-        // Setting it inside Jump() gave the player a free double jump the instant they
-        // left the ground, before they were even considered airborne.
+        cState.wallSliding = false;
+        cState.touchingWall = false;
+        wallJumpLockoutTimer = 0f;
         JUMPS_LEFT = 1;
     }
 
@@ -619,6 +727,75 @@ public class HeroController : MonoBehaviour
     {
         cState.dashing = false;
         rb2d.linearVelocity = new Vector2(0f, rb2d.linearVelocity.y);
+    }
+
+    // -------------------------------------------------------
+    // Wall Detection & Wall Jump
+    // -------------------------------------------------------
+
+    private void CheckWall()
+    {
+        touchingWallThisFrame = false;
+        wallDirection = 0;
+
+        if (cState.onGround || cState.dashing) return;
+
+        // Cast rays from collider center to detect walls
+        Vector2 origin = selfCollider != null
+            ? (Vector2)selfCollider.bounds.center
+            : (Vector2)transform.position;
+
+        // Check right side
+        RaycastHit2D hitRight = Physics2D.Raycast(origin, Vector2.right, WALLJUMP_RAY_LENGTH, groundLayer);
+        if (hitRight.collider != null && hitRight.collider != selfCollider)
+        {
+            touchingWallThisFrame = true;
+            wallDirection = 1;
+            return;
+        }
+
+        // Check left side
+        RaycastHit2D hitLeft = Physics2D.Raycast(origin, Vector2.left, WALLJUMP_RAY_LENGTH, groundLayer);
+        if (hitLeft.collider != null && hitLeft.collider != selfCollider)
+        {
+            touchingWallThisFrame = true;
+            wallDirection = -1;
+        }
+    }
+
+    public void WallJump()
+    {
+        cState.wallSliding = false;
+        cState.touchingWall = false;
+        isJumping = true;
+        isDoubleJumping = false;
+        jumpButtonHeld = true;
+        cState.jumping = true;
+        jumpCooldownTimer = 0.2f;
+
+        // Brief lockout so the kickoff arc feels natural
+        wallJumpLockoutTimer = WJ_INPUT_LOCKOUT;
+
+        if (anim != null) anim.SetTrigger(hashJump);
+
+        // Kick away from wall + upward impulse
+        float kickDirection = -wallDirection;
+        Vector2 v = rb2d.linearVelocity;
+        v.x = kickDirection * WJ_KICKOFF_SPEED;
+        v.y = WJ_JUMP_SPEED;
+        rb2d.linearVelocity = v;
+
+        // Face away from wall
+        FacingDirection = (int)kickDirection;
+        TrySetCorrectFacing();
+
+        SetState(ActorStates.airborne);
+    }
+
+    private void EndWallSlide()
+    {
+        cState.wallSliding = false;
+        cState.touchingWall = false;
     }
 
     // -------------------------------------------------------
