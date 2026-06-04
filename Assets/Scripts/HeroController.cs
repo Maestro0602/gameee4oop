@@ -11,6 +11,9 @@ public class HeroController : MonoBehaviour
 {
     public static HeroController instance;
 
+    [Header("Audio")]
+    [SerializeField] private AudioManager audioManager;
+
     [Header("Movement - Run & Walk")]
     [SerializeField] private float RUN_SPEED = 8.3f;
     [SerializeField] private float WALK_SPEED = 6f;
@@ -201,6 +204,11 @@ public class HeroController : MonoBehaviour
     {
         move_input = ReadMoveInput();
 
+        if (!Mathf.Approximately(move_input, 0f))
+            PlayRunningSound();
+        else
+            StopRunningSound();
+
         float vInput = ReadVerticalInput();
         bool canLook = Math.Abs(move_input) < 0.1f && cState.onGround;
 
@@ -237,6 +245,20 @@ public class HeroController : MonoBehaviour
         if (ReadAttackInput()) DoAttack();
 
         UpdateAnimations();
+    }
+
+    private void PlayRunningSound()
+    {
+        if (audioManager == null) return;
+        if (!audioManager.runningSFXSource.isPlaying)
+            audioManager.runningSFXSource.Play();
+    }
+
+    private void StopRunningSound()
+    {
+        if (audioManager == null) return;
+        if (audioManager.runningSFXSource.isPlaying)
+            audioManager.runningSFXSource.Stop();
     }
 
     private void UpdateAnimations()
@@ -588,6 +610,8 @@ public class HeroController : MonoBehaviour
         float cooldown = attackData != null ? attackData.attackCooldown : 0.25f;
         attackCooldownTimer = cooldown;
         Invoke(nameof(EndAttack), 0.15f);
+
+        audioManager.PlaySFX(audioManager.fighting);
     }
 
     private void EndAttack()
@@ -658,6 +682,8 @@ public class HeroController : MonoBehaviour
         Vector2 v = rb2d.linearVelocity;
         v.y = JUMP_SPEED;
         rb2d.linearVelocity = v;
+
+        audioManager.PlaySFX(audioManager.jumping);
     }
 
     public void DoubleJump()
@@ -687,6 +713,8 @@ public class HeroController : MonoBehaviour
         v.y = 0f;
         v.x = FacingDirection * DASH_SPEED;
         rb2d.linearVelocity = v;
+
+        audioManager.SFXSource.PlayOneShot(audioManager.dashing, 0.2f);
     }
 
     private void EndDash()
