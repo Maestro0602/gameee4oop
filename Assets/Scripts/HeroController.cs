@@ -11,6 +11,9 @@ public class HeroController : MonoBehaviour
 {
     public static HeroController instance;
 
+    [Header("Audio")]
+    [SerializeField] private AudioManager audioManager;
+
     [Header("Movement - Run & Walk")]
     [SerializeField] private float RUN_SPEED = 8.3f;
     [SerializeField] private float WALK_SPEED = 6f;
@@ -177,6 +180,11 @@ public class HeroController : MonoBehaviour
     {
         move_input = ReadMoveInput();
 
+        if (!Mathf.Approximately(move_input, 0f))
+            PlayRunningSound();
+        else
+            StopRunningSound();
+
         float vInput = ReadVerticalInput();
         bool canLook = Math.Abs(move_input) < 0.1f && cState.onGround;
 
@@ -211,6 +219,20 @@ public class HeroController : MonoBehaviour
         if (ReadAttackInput()) DoAttack();
 
         UpdateAnimations();
+    }
+
+    private void PlayRunningSound()
+    {
+        if (audioManager == null) return;
+        if (!audioManager.runningSFXSource.isPlaying)
+            audioManager.runningSFXSource.Play();
+    }
+
+    private void StopRunningSound()
+    {
+        if (audioManager == null) return;
+        if (audioManager.runningSFXSource.isPlaying)
+            audioManager.runningSFXSource.Stop();
     }
 
     private void UpdateAnimations()
