@@ -104,3 +104,6 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+/Assets/sprite/tiles and background_foreground (new)
+/Assets/sprite/Skyland.meta
+/Assets/sprite/tiles and background_foreground (new).meta

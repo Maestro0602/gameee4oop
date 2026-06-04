@@ -14,6 +14,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/OpeningDialogue.unity
     guid: 4b1f69c75544f264799d10df986b05a6
+  - enabled: 1
+    path: Assets/Scenes/forest.unity
+    guid: 646f6a5fad1f3c1408027d99b0d4b1d4
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: b2b4a9a0e6657a74d9f104cf808a577b, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
