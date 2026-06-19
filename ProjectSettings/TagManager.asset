@@ -8,6 +8,7 @@ TagManager:
   - HealPlayer
   - UI
   - reverse
+  - portal
   layers:
   - Default
   - TransparentFX
