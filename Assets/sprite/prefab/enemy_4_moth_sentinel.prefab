@@ -18,19 +18,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
       propertyPath: m_LocalScale.x
-      value: 10
+      value: 17.637001
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
       propertyPath: m_LocalScale.y
-      value: 10
+      value: 16.835001
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 175.8
+      value: 474
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 21.2
+      value: 381.9
       objectReference: {fileID: 0}
     - target: {fileID: 7878350319992209165, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
       propertyPath: m_LocalPosition.z
@@ -77,6 +77,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -2253911629886400664, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6967908862312751740}
+    - targetCorrespondingSourceObject: {fileID: -2253911629886400664, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4613778504418819251}
   m_SourcePrefab: {fileID: -8435245712485981826, guid: 11dada60e159ee946b3ffc58e36386b8, type: 3}
 --- !u!1 &2022823279912891974 stripped
 GameObject:
@@ -917,7 +920,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: -1
+          value: -17.637
         - useVariable: 1
           name: 
           tooltip: 
@@ -951,7 +954,7 @@ MonoBehaviour:
         fsmQuaternionParams: []
         stringParams:
         - 
-        byteData: 000000
+        byteData: 010000
         arrayParamSizes: 
         arrayParamTypes: []
         customTypeSizes: 
@@ -1031,7 +1034,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 1
+          value: 17.637
         - useVariable: 1
           name: 
           tooltip: 
@@ -1065,7 +1068,7 @@ MonoBehaviour:
         fsmQuaternionParams: []
         stringParams:
         - 
-        byteData: 000000
+        byteData: 010000
         arrayParamSizes: 
         arrayParamTypes: []
         customTypeSizes: 
@@ -1173,3 +1176,142 @@ MonoBehaviour:
     handleAnimatorIK: 0
   fsmTemplate: {fileID: 0}
   eventHandlerComponentsAdded: 0
+--- !u!60 &4613778504418819251
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2022823279912891974}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.4301676, y: -0.22352943}
+    oldSize: {x: 1.79, y: 1.7}
+    newSize: {x: 1.79, y: 1.7}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths:
+    - - {x: 0.16, y: 0.38}
+      - {x: 0.24, y: 0.38}
+      - {x: 0.29, y: 0.44}
+      - {x: 0.35999998, y: 0.53999996}
+      - {x: 0.37, y: 0.47}
+      - {x: 0.5, y: 0.48999998}
+      - {x: 0.58, y: 0.57}
+      - {x: 0.65, y: 0.59}
+      - {x: 0.75, y: 0.61}
+      - {x: 0.76, y: 0.59}
+      - {x: 1.02, y: 0.59}
+      - {x: 1.02, y: 0.63}
+      - {x: 0.90999997, y: 0.68}
+      - {x: 0.82, y: 0.69}
+      - {x: 0.77, y: 0.71999997}
+      - {x: 0.71999997, y: 0.77}
+      - {x: 0.78, y: 0.87}
+      - {x: 0.84, y: 0.93}
+      - {x: 0.87, y: 1.03}
+      - {x: 0.85999995, y: 1.14}
+      - {x: 0.84999996, y: 1.28}
+      - {x: 0.79999995, y: 1.38}
+      - {x: 0.9, y: 1.5}
+      - {x: 0.93, y: 1.54}
+      - {x: 0.97999996, y: 1.64}
+      - {x: 0.97999996, y: 1.8199999}
+      - {x: 0.93, y: 1.91}
+      - {x: 0.90999997, y: 1.9499999}
+      - {x: 0.81, y: 1.9799999}
+      - {x: 0.76, y: 1.88}
+      - {x: 0.66999996, y: 1.5699999}
+      - {x: 0.63, y: 1.48}
+      - {x: 0.63, y: 1.61}
+      - {x: 0.59999996, y: 1.6999999}
+      - {x: 0.57, y: 1.7199999}
+      - {x: 0.57, y: 2.03}
+      - {x: 0.56, y: 2.08}
+      - {x: 0.44, y: 2.08}
+      - {x: 0.38, y: 1.99}
+      - {x: 0.37, y: 2.02}
+      - {x: 0.34, y: 2.02}
+      - {x: 0.26999998, y: 1.9399999}
+      - {x: 0.17999999, y: 1.74}
+      - {x: 0.13, y: 1.61}
+      - {x: -0.02, y: 1.6999999}
+      - {x: -0.11, y: 1.78}
+      - {x: -0.17, y: 1.8199999}
+      - {x: -0.22999999, y: 1.8499999}
+      - {x: -0.42, y: 1.9399999}
+      - {x: -0.58, y: 1.9699999}
+      - {x: -0.71, y: 1.9699999}
+      - {x: -0.77, y: 1.92}
+      - {x: -0.77, y: 1.9}
+      - {x: -0.76, y: 1.86}
+      - {x: -0.71999997, y: 1.79}
+      - {x: -0.66999996, y: 1.75}
+      - {x: -0.66999996, y: 1.63}
+      - {x: -0.53999996, y: 1.5799999}
+      - {x: -0.64, y: 1.52}
+      - {x: -0.65, y: 1.39}
+      - {x: -0.59999996, y: 1.3399999}
+      - {x: -0.5, y: 1.35}
+      - {x: -0.45999998, y: 1.3299999}
+      - {x: -0.56, y: 1.26}
+      - {x: -0.56, y: 1.1999999}
+      - {x: -0.53999996, y: 1.17}
+      - {x: -0.45, y: 1.12}
+      - {x: -0.39, y: 1.11}
+      - {x: -0.45, y: 1.0799999}
+      - {x: -0.5, y: 1}
+      - {x: -0.48999998, y: 0.9}
+      - {x: -0.45999998, y: 0.85999995}
+      - {x: -0.45999998, y: 0.78999996}
+      - {x: -0.48999998, y: 0.76}
+      - {x: -0.51, y: 0.71999997}
+      - {x: -0.51, y: 0.57}
+      - {x: -0.47, y: 0.53999996}
+      - {x: -0.42999998, y: 0.53999996}
+      - {x: -0.39, y: 0.56}
+      - {x: -0.32, y: 0.71}
+      - {x: -0.28, y: 0.71}
+      - {x: -0.28, y: 0.64}
+      - {x: -0.26, y: 0.62}
+      - {x: -0.17999999, y: 0.62}
+      - {x: -0.12, y: 0.69}
+      - {x: -0.08, y: 0.57}
+      - {x: 0, y: 0.51}
+      - {x: 0, y: 0.38}
+      - {x: 0.07, y: 0.38}
+      - {x: 0.17, y: 0.51}
+      - {x: 0.17999999, y: 0.56}
+      - {x: 0.17999999, y: 0.5}
+  m_UseDelaunayMesh: 1

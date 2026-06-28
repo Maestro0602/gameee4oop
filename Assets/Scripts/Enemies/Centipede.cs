@@ -14,6 +14,7 @@ public class Centipede : MonoBehaviour
     private Collider2D coll;
     private Coroutine crawlRoutine;
     private int facingDirection = 1; // 1 for right, -1 for left
+    private HealthManager healthManager;
 
     public bool IsTurning { get; private set; }
     public bool IsCrawling => crawlRoutine != null;
@@ -22,6 +23,7 @@ public class Centipede : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         coll = GetComponent<Collider2D>();
+        healthManager = GetComponent<HealthManager>();
 
         // GLOBAL FIX: This stops raycasts from detecting the collider they originate inside of.
         // This is crucial if everything (including this enemy) is on the "Default" layer.
@@ -59,6 +61,9 @@ public class Centipede : MonoBehaviour
             yield return new WaitForFixedUpdate();
 
             if (IsTurning) continue;
+
+            // Skip movement while being knocked back — let the knockback velocity play out
+            if (healthManager != null && healthManager.IsKnockedBack) continue;
 
             // Move forward
             rb.linearVelocity = new Vector2(speed * facingDirection, rb.linearVelocity.y);

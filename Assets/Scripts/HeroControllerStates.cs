@@ -58,6 +58,8 @@ public class HeroControllerStates
     {
         this.onGround = false;
         this.jumping = false;
+        this.isJumping = false;
+        this.isClimbing = false;
         this.falling = false;
         this.dashing = false;
         this.isSprinting = false;
@@ -141,6 +143,12 @@ public class HeroControllerStates
 
     // Token: 0x04000EBB RID: 3771
     public bool jumping;
+
+    /// <summary>True from jump initiation until landing — separate from onGround.</summary>
+    public bool isJumping;
+
+    /// <summary>True when clinging to a wall with the climb button held.</summary>
+    public bool isClimbing;
 
     // Token: 0x04000EBC RID: 3772
     public bool shuttleCock;

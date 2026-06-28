@@ -9,12 +9,14 @@ public class BombardierBeetle : MonoBehaviour
     [SerializeField] private Transform playerTransform; // Assign in inspector or gets by tag
 
     private Rigidbody2D rb;
+    private HealthManager healthManager;
     private bool isCharging;
     private int facingDirection = 1;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        healthManager = GetComponent<HealthManager>();
     }
 
     private void Start()
@@ -39,6 +41,13 @@ public class BombardierBeetle : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // Skip movement while being knocked back — let the knockback velocity play out
+        if (healthManager != null && healthManager.IsKnockedBack)
+        {
+            isCharging = false; // Cancel charge on hit
+            return;
+        }
+
         if (isCharging)
         {
             rb.linearVelocity = new Vector2(chargeSpeed * facingDirection, rb.linearVelocity.y);
