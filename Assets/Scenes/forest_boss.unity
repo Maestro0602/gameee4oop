@@ -4667,7 +4667,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.040680885, y: 0}
+  m_Offset: {x: 1.1470453, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -4677,7 +4677,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 6.3886385, y: 3.65}
+  m_Size: {x: 4.17591, y: 3.65}
   m_EdgeRadius: 0
 --- !u!114 &1387378508
 MonoBehaviour:
@@ -4691,7 +4691,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f2d4242150dc524d88d54dbd3fbc0b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleTrigger
-  sceneName: forest_boss
+  sceneName: inside-castle
 --- !u!1 &1439340518
 GameObject:
   m_ObjectHideFlags: 0

@@ -5,11 +5,11 @@ public class LoginManager : MonoBehaviour
 {
     public void OnStartButton()
     {
-        SceneManager.LoadScene("OpeningDialogue");
+        SceneManager.LoadScene("LoginMenu");
     }
 
     public void OnQuitButton()
     {
-        UnityEngine.Application.Quit(); 
+        UnityEngine.Application.Quit(); // ← fully qualified, no ambiguity
     }
 }

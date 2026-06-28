@@ -29,7 +29,7 @@ public class DamageReference : ScriptableObject
     public int Value => value;
 }
 
-public class HealthManager : MonoBehaviour
+public class CombatHealthManagerStub : MonoBehaviour
 {
     public int currentHP = 10;
     private Rigidbody2D rb;

@@ -13,13 +13,29 @@ public class InsideCastle : MonoBehaviour
     public float typingSpeed = 0.09f;
 
     private string[] lines = {
-        "hello",
-        "hi",
-        "Yes, it's me your majesty! Where are you?!",
-        "Over here!"
+        "Your Highness! Thank goodness you're unharmed, we need to move before the sorceress returns!",
+        "Leave? Why would I leave? The view from this tower is spectacular like it's ready to be redrawn",
+        "Princess... you’re in shock... the dark magic in this room is heavy. Do you know where the sorceress is?",
+        "She gave me exactly what I came here to find... absolute isolation to hone my powers and become unstoppable...",
+        "What are you talking about? The panicked letters... your father told me you were dragged away!",
+        "How dense can you be? I wrote the script, my dear warrior! I knew my father would turn to the one man desperate for redemption.",
+        "No... you're lying. The sorceress framed me years ago... she's the reason I was banished!",
+        "Oh, she did. I did. You were far too loyal to my father. I needed you removed until my power was ready!",
+        "You... you are the sorceress.",
+        "There is no witch in the woods! There is only a daughter who outgrew her father's shadow!",
+        "I broke back into this castle for you! I risked everything to save you!",
+        "And you brought yourself right to the executioner's block, so... now... will you kneel, or do I banish you to the grave?!"
     };
 
     private string[] speakers = {
+        "Warrior",
+        "Princess",
+        "Warrior",
+        "Princess",
+        "Warrior",
+        "Princess",
+        "Warrior",
+        "Princess",
         "Warrior",
         "Princess",
         "Warrior",

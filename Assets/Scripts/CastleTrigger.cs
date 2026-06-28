@@ -8,7 +8,7 @@ public class CastleTrigger : MonoBehaviour
     void OnTriggerEnter2D(Collider2D other)
     {
         Debug.Log("Triggered by: " + other.name + " tag: " + other.tag);
-        if (other.CompareTag("Hero"))
+        if (other.CompareTag("Player"))
         {
             SceneManager.LoadScene(sceneName);
         }
