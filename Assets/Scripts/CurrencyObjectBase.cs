@@ -8,17 +8,7 @@ public abstract class CurrencyObjectBase : MonoBehaviour
 
     protected virtual void OnTriggerEnter2D(Collider2D collision)
     {
-        TryCollect(collision.gameObject);
-    }
-
-    protected virtual void OnCollisionEnter2D(Collision2D collision)
-    {
-        TryCollect(collision.gameObject);
-    }
-
-    private void TryCollect(GameObject obj)
-    {
-        if (obj.CompareTag("Player") || obj.GetComponent<HeroController>() != null)
+        if (collision.CompareTag("Player") || collision.gameObject.GetComponent<HeroController>() != null)
         {
             if (Collected())
             {
