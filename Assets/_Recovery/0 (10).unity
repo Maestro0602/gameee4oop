@@ -1364,9 +1364,6 @@ MonoBehaviour:
   knockbackDuration: 0.2
   preventPhysicsPush: 1
   heavyMass: 10000
-  dropPrefab: {fileID: 0}
-  minDropCount: 1
-  maxDropCount: 3
 --- !u!50 &970859483
 Rigidbody2D:
   serializedVersion: 5
@@ -2440,63 +2437,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 873246eb252ec15419ce791aecbf4b36, type: 3}
---- !u!1001 &2576458364786780081
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1393235969149447782, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_Name
-      value: Boss
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -138
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 43
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6756256238440227302, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 5be48dd726dadc04a979b1afcb11479e, type: 3}
 --- !u!60 &2609293240251731297
 PolygonCollider2D:
   m_ObjectHideFlags: 0
@@ -2527,7 +2467,7 @@ PolygonCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -2543,17 +2483,27 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.14336933, y: 0.31331062}
-      - {x: 0.11102126, y: 0.23510693}
-      - {x: 0.010399902, y: 0.22771545}
-      - {x: -0.04757804, y: 0.22345649}
-      - {x: -0.1492373, y: 0.2461605}
-      - {x: -0.21282607, y: 0.2206817}
-      - {x: -0.19672263, y: 0.1755408}
-      - {x: -0.059125386, y: 0.14452864}
-      - {x: 0.0958275, y: 0.13318262}
-      - {x: 0.18428892, y: 0.20563124}
-      - {x: 0.15265934, y: 0.33576986}
+    - - {x: -0.06796961, y: 0.26382253}
+      - {x: -0.13250262, y: 0.27321923}
+      - {x: -0.15697506, y: 0.26248455}
+      - {x: -0.20031221, y: 0.24058644}
+      - {x: -0.1878653, y: 0.25682688}
+      - {x: -0.20473318, y: 0.24316002}
+      - {x: -0.1943955, y: 0.24965331}
+      - {x: -0.19893658, y: 0.24981056}
+      - {x: -0.21572885, y: 0.24634281}
+      - {x: -0.22366123, y: 0.27172667}
+      - {x: -0.2410621, y: 0.24683514}
+      - {x: -0.20074743, y: 0.21980797}
+      - {x: -0.18044336, y: 0.19416389}
+      - {x: -0.15731981, y: 0.17362787}
+      - {x: -0.12662421, y: 0.17891684}
+      - {x: -0.08874959, y: 0.16160911}
+      - {x: -0.03035976, y: 0.14545865}
+      - {x: 0.08362478, y: 0.12817255}
+      - {x: 0.14881298, y: 0.18003286}
+      - {x: 0.1955671, y: 0.2632893}
+      - {x: 0.16831596, y: 0.33498353}
   m_UseDelaunayMesh: 1
 --- !u!114 &2853207589652254820
 MonoBehaviour:
@@ -2562,7 +2512,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6416729396926614525}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6b8c18d3a0b9ae843a4aecdbf65d33b4, type: 3}
   m_Name: 
@@ -2578,8 +2528,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5479092737437319137}
-  - component: {fileID: 5479092737437319138}
-  - component: {fileID: 5479092737437319139}
   m_Layer: 0
   m_Name: MeleeWeapon_Up
   m_TagString: Untagged
@@ -2653,7 +2601,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6780021444534746603}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6b8c18d3a0b9ae843a4aecdbf65d33b4, type: 3}
   m_Name: 
@@ -2690,7 +2638,7 @@ PolygonCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -2706,14 +2654,14 @@ PolygonCollider2D:
   m_AutoTiling: 0
   m_Points:
     m_Paths:
-    - - {x: 0.03888907, y: 0.54540664}
+    - - {x: 0.05733681, y: 0.5407946}
       - {x: -0.14439374, y: 0.4833162}
       - {x: -0.24375582, y: 0.39466324}
       - {x: -0.24047785, y: 0.2761167}
       - {x: -0.19917515, y: 0.21164283}
       - {x: -0.15851384, y: 0.19762564}
       - {x: -0.106988706, y: 0.17825688}
-      - {x: -0.08899159, y: 0.2585442}
+      - {x: -0.07999856, y: 0.2585442}
       - {x: -0.14767584, y: 0.30441865}
       - {x: -0.13731202, y: 0.3417606}
       - {x: -0.09727533, y: 0.4545402}
@@ -2734,77 +2682,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6920198880009761726}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!60 &5479092737437319138
-PolygonCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2876391723445266932}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_ForceSendLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ForceReceiveLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_ContactCaptureLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_CallbackLayers:
-    serializedVersion: 2
-    m_Bits: 4294967295
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_CompositeOperation: 0
-  m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0, y: 0}
-    oldSize: {x: 0, y: 0}
-    newSize: {x: 0, y: 0}
-    adaptiveTilingThreshold: 0
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Points:
-    m_Paths:
-    - - {x: 0.18367974, y: 0.37599188}
-      - {x: 0.17361748, y: 0.44996738}
-      - {x: 0.11307089, y: 0.48842326}
-      - {x: -0.008724179, y: 0.54873216}
-      - {x: -0.16115063, y: 0.5445012}
-      - {x: -0.25407958, y: 0.40714735}
-      - {x: -0.1632095, y: 0.36030626}
-      - {x: -0.16047645, y: 0.4688245}
-      - {x: -0.027798874, y: 0.49150982}
-      - {x: 0.030141234, y: 0.47256765}
-  m_UseDelaunayMesh: 1
---- !u!114 &5479092737437319139
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2876391723445266932}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b8c18d3a0b9ae843a4aecdbf65d33b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MeleeWeapon
-  damageAmount: 1
-  knockbackForce: 15
 --- !u!1001 &5495166800090102689
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2875,12 +2752,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5108440596304970230, guid: fb67fb6306427e54a8bec1617342794a, type: 3}
       propertyPath: maxHealth
-      value: 100
+      value: 2e+11
       objectReference: {fileID: 0}
-    - target: {fileID: 5108440596304970230, guid: fb67fb6306427e54a8bec1617342794a, type: 3}
-      propertyPath: dropPrefab
-      value: 
-      objectReference: {fileID: 4252336232641005500, guid: 90c1d5cb903e27947a90ddab9f27824f, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -3090,9 +2963,9 @@ MonoBehaviour:
   spellCooldown: 1
   canChargeAttack: 0
   chargeTimeThreshold: 1
-  DASH_SPEED: 300
-  DASH_DISTANCE: 50
-  DASH_COOLDOWN: 1
+  DASH_SPEED: 20
+  DASH_DISTANCE: 6
+  DASH_COOLDOWN: 0.6
   WALL_RAY_LENGTH: 1.2
   WALLSLIDE_SPEED: 3
   WALL_SLIDE_GRAVITY: 4
@@ -3235,9 +3108,9 @@ MonoBehaviour:
   attackDamage: 1000
   attackKnockbackForce: 200
   forwardWeapon: {fileID: 3593688444549133628}
-  upWeapon: {fileID: 5479092737437319139}
+  upWeapon: {fileID: 0}
   downWeapon: {fileID: 2853207589652254820}
-  pogoForce: 40
+  pogoForce: 15
   horizontalRecoilForce: 8
   hero_state: 0
   prev_hero_state: 0
@@ -3270,7 +3143,7 @@ Transform:
   m_GameObject: {fileID: 5605137936899893271}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 12.8, y: 53.1, z: 0}
+  m_LocalPosition: {x: -7.3, y: -1.2, z: 0}
   m_LocalScale: {x: 100, y: 100, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3476,7 +3349,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -3538,7 +3411,7 @@ MonoBehaviour:
       - fsmEvent:
           name: 5Hearts
           isSystemEvent: 0
-          isGlobal: 1
+          isGlobal: 0
         toState: 5Hearts
         linkStyle: 0
         linkConstraint: 0
@@ -3630,7 +3503,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -3648,7 +3521,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -3666,7 +3539,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -3684,7 +3557,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -3702,7 +3575,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -3720,7 +3593,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -3738,7 +3611,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -5613,38 +5486,22 @@ MonoBehaviour:
       actionData:
         actionNames:
         - HutongGames.PlayMaker.Actions.CameraFadeOut
-        - HutongGames.PlayMaker.Actions.SetAnimatorTrigger
         customNames:
         - 
-        - 
-        actionEnabled: 0101
-        actionIsOpen: 0101
-        actionStartIndex: 0000000004000000
-        actionHashCodes: 543032009bd6f801
+        actionEnabled: 01
+        actionIsOpen: 01
+        actionStartIndex: 00000000
+        actionHashCodes: 54303200
         unityObjectParams: []
         fsmGameObjectParams: []
-        fsmOwnerDefaultParams:
-        - ownerOption: 1
-          gameObject:
-            useVariable: 0
-            name: 
-            tooltip: 
-            showInInspector: 0
-            networkSync: 0
-            value: {fileID: 5605137936899893271}
+        fsmOwnerDefaultParams: []
         animationCurveParams: []
         functionCallParams: []
         fsmTemplateControlParams: []
         fsmEventTargetParams: []
         fsmPropertyParams: []
         layoutOptionParams: []
-        fsmStringParams:
-        - useVariable: 0
-          name: 
-          tooltip: 
-          showInInspector: 0
-          networkSync: 0
-          value: DIE
+        fsmStringParams: []
         fsmObjectParams: []
         fsmVarParams: []
         fsmArrayParams: []
@@ -5676,16 +5533,14 @@ MonoBehaviour:
         arrayParamTypes: []
         customTypeSizes: 
         customTypeNames: []
-        paramDataType: 190000000f00000017000000010000001400000012000000
+        paramDataType: 190000000f0000001700000001000000
         paramName:
         - color
         - time
         - finishEvent
         - realTime
-        - gameObject
-        - trigger
-        paramDataPos: 000000000000000000000000000000000000000000000000
-        paramByteDataSize: 000000000000000000000000010000000000000000000000
+        paramDataPos: 00000000000000000000000000000000
+        paramByteDataSize: 00000000000000000000000001000000
     - name: HealPlayer
       description: 
       colorIndex: 0
@@ -5737,7 +5592,7 @@ MonoBehaviour:
           tooltip: 
           showInInspector: 0
           networkSync: 0
-          value: 7
+          value: 6
         - useVariable: 0
           name: 
           tooltip: 
@@ -5835,7 +5690,7 @@ MonoBehaviour:
       isGlobal: 0
     - name: 5Hearts
       isSystemEvent: 0
-      isGlobal: 1
+      isGlobal: 0
     - name: 6Hearts
       isSystemEvent: 0
       isGlobal: 0
@@ -6030,4 +5885,3 @@ SceneRoots:
   - {fileID: 184207582040620174}
   - {fileID: 827886381}
   - {fileID: 256848053}
-  - {fileID: 2576458364786780081}

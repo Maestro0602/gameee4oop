@@ -24,15 +24,28 @@ public class MeleeWeapon : MonoBehaviour
         weaponCollider.isTrigger = true;
     }
 
+    // Called automatically when the script is enabled (e.g. by the Animation Timeline)
+    private void OnEnable()
+    {
+        if (weaponCollider != null) weaponCollider.enabled = true;
+        alreadyHit.Clear();
+    }
+
+    // Called automatically when the script is disabled
+    private void OnDisable()
+    {
+        if (weaponCollider != null) weaponCollider.enabled = false;
+    }
+
+    // Kept for backwards compatibility with the Combo State system
     public void EnableWeapon()
     {
-        weaponCollider.enabled = true;
-        alreadyHit.Clear();
+        this.enabled = true;
     }
 
     public void DisableWeapon()
     {
-        weaponCollider.enabled = false;
+        this.enabled = false;
     }
 
     private void OnTriggerEnter2D(Collider2D other)

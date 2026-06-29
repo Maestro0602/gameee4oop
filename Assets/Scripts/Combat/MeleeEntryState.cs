@@ -63,10 +63,10 @@ public class MeleeEntryState : MeleeBaseState
                 HeroController.instance.CurrentMeleeWeapon.DisableWeapon();
         }
 
-        // Combo Trigger
+        // Combo Trigger (Disabled to prevent warnings)
         if (stateInfo.normalizedTime >= 0.7f && shouldCombo)
         {
-            animator.SetTrigger("MeleeCombo1");
+            // animator.SetTrigger("MeleeCombo1");
         }
     }
 

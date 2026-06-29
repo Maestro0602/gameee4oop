@@ -128,3 +128,95 @@ We recently added built-in C# functionality for when the player gets hit by enem
 ### Step C: Player Health
 - The `PlayerData.cs` attached to your `GameManager` also tracks your `health`.
 - If you use PlayMaker on your enemies to deal damage to the player, you can use a "Send Message" action or a custom action to call `PlayerData.instance.TakeHealth(1, false, true)` to subtract from this value.
+
+---
+
+## 8. Boss Sprite & Animation Setup (Manual Slicing)
+
+When you import a new boss sprite sheet, you must slice it before animating:
+1. Select the imported sprite sheet image in your `Assets` folder.
+2. In the Inspector, change **Sprite Mode** from `Single` to `Multiple`.
+3. Click the **Sprite Editor** button.
+4. Click the **Slice** dropdown at the top left. Set Type to **Automatic** (or Grid by Cell Size).
+5. Click **Slice**, then click **Apply** at the top right.
+6. Drag the first frame into your Scene to create the Boss GameObject.
+7. Open the **Animation** window, select your Boss, click "Create", and drag the frames into the timeline to create your Idle, Walk, and Attack clips.
+
+---
+
+## 9. PlayMaker Death & Respawn Setup
+
+To handle the player dying and respawning entirely within PlayMaker (without writing C# code), set up a "Death Manager" FSM on your Hero:
+
+### Step A: The Death FSM
+1. Add a new **PlayMakerFSM** to your Hero (name it `Death Manager`).
+2. **State 1 (Alive Check):**
+   * Use `Get Property` on your `PlayerData` script to store the `health` variable in a new PlayMaker Integer Variable called `CurrentHealth`.
+   * Use `Int Compare` to check if `CurrentHealth` is Equal to or Less Than `0`.
+   * If true, send a `HERO_DIED` event. If false, use a `Next Frame Event` to loop back to this state so it checks constantly.
+3. **State 2 (Dying):** *(Transition here on `HERO_DIED`)*
+   * First, make sure you created a `Death` animation clip in your Animation window!
+   * Use `Animator Set Trigger` (or `Animator Play`) to play your Hero's `Death` animation.
+   * Use `Set Velocity 2D` (X=0, Y=0) to stop the player from sliding.
+   * Use `Wait` for 2 seconds to let the animation finish playing.
+   * Send a `FINISHED` event.
+4. **State 3 (Reload Scene):** *(Transition here on `FINISHED`)*
+   * Use `Load Level` (or `Load Scene`) to reload your current scene name. This completely resets the room and enemies!
+
+### Step B: Resetting Health on Load
+Because your `PlayerData` uses `DontDestroyOnLoad`, your health will still be 0 when the scene reloads!
+* Create a **Start State** in this FSM before the "Alive Check". 
+* Use `Set Property` to set your `PlayerData` health back to max (e.g., 5).
+* Use `Set Animator Trigger` to play your "Idle" animation (so they aren't stuck on the death frame).
+* Transition from this Start state immediately into your "Alive Check" state.
+
+### Step C: Setting a Custom Respawn Point (Checkpoints)
+If you just reload the scene, the player will start wherever you placed them in the Unity Editor. To make them spawn at a specific Checkpoint (like a Bench):
+1. **The Global Variables:** In the PlayMaker Editor, go to the **Globals** tab. Create two Global Float variables: `Respawn_X` and `Respawn_Y`.
+2. **The Checkpoint Object:** Create a Bench or Checkpoint GameObject. Give it a Collider2D (Is Trigger = True) and an FSM.
+   * When the player enters the trigger (using `Trigger Event`), use `Get Position` on the Checkpoint to get its X and Y coordinates.
+   * Use `Set Float Value` to save those coordinates into your Global `Respawn_X` and `Respawn_Y` variables!
+3. **The Teleport:** Go back to your Hero's Death Manager FSM. In the **Start State** (from Step B), add a `Set Position` action. 
+   * Set the Hero's X to `Respawn_X` and Y to `Respawn_Y`. 
+   * Now, whenever the scene reloads after death, the Hero instantly teleports to the last bench they touched!
+
+---
+
+## 10. Complete Boss Setup From Scratch
+
+If you have a sprite sheet and want to build a boss completely from scratch, follow these exact steps:
+
+### Step 1: The Visuals (Sprites & Animation)
+1. **Slice the Sprite Sheet:** Click your imported sprite sheet in the Project window. Set **Sprite Mode** to `Multiple`. Click **Sprite Editor** -> Slice -> Automatic -> Slice -> Apply.
+2. **Create the GameObject:** Drag the very first sliced frame (usually an idle frame) from the Project window into your Scene. Name it `Boss`.
+3. **Animate It:** 
+   * Open the **Animation** window (`Window -> Animation -> Animation`).
+   * With the `Boss` selected, click **Create** to make an `Idle` animation clip.
+   * Drag all your Idle frames into the timeline. 
+   * Repeat this process to create clips for `Walk`, `Attack`, `Hurt`, and `Death`.
+
+### Step 2: The Physics & Hitbox
+1. Select your `Boss` GameObject.
+2. Add a **Rigidbody2D**. Set Gravity Scale to 1 (or 3 if you want it to fall faster) and check the **Freeze Rotation Z** box under Constraints so it doesn't fall over.
+3. Add a **CapsuleCollider2D** or **BoxCollider2D**. Adjust the green box to fit the boss's body. 
+   * Do **NOT** check "Is Trigger". This is the physical body that the player will bump into.
+   * Make sure the GameObject's Tag is set to **Enemy** so the player takes knockback when touching it.
+
+### Step 3: Health & Currency System
+1. Add the **`HealthManager`** script to your `Boss` GameObject.
+2. Set the `Max Health` (e.g., 500).
+3. Under the **Drops** section, drag your Geo/Coin Prefab into the `Drop Prefab` slot. Set Min Drop Count to 50 and Max to 100. (When the boss's health reaches 0, it will automatically scatter the money and destroy itself!).
+
+### Step 4: The Boss AI (PlayMaker)
+1. Add a **PlayMakerFSM** component to your `Boss`.
+2. Name the FSM `Boss AI`.
+3. Create the following States:
+   * **State 1 (Idle):** Use `Animator Play` to play the `Idle` animation. Use `Wait` for 2 seconds, then transition to Chase.
+   * **State 2 (Chase):** Use `Animator Play` to play `Walk`. Use `Move Towards` to make the boss walk towards the Player GameObject. Use `Distance To` to check how far the player is. If distance < 2, transition to Attack.
+   * **State 3 (Attack):** Use `Animator Play` to play `Attack`. Use `Wait` to let the animation finish, then transition back to Idle.
+
+### Step 5: Dealing Damage to the Player
+If you want the boss's physical body to deal damage just by touching the player:
+1. Since the boss is tagged as `Enemy`, your `HeroController`'s built-in `OnCollisionEnter2D` will automatically knock the player back and remove 1 health when they touch! You don't have to code anything else for contact damage.
+
+You now have a fully functional boss that can be hit, takes damage, chases you, hurts you on contact, and explodes into money when defeated!

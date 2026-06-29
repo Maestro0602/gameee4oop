@@ -17,6 +17,12 @@ public class HealthManager : MonoBehaviour, IDamageable
     [Tooltip("Mass applied to resist player pushes. Higher = harder to push.")]
     [SerializeField] private float heavyMass = 10000f;
 
+    [Header("Drops")]
+    [Tooltip("Prefab to spawn when this entity is defeated (e.g. money/rocks).")]
+    [SerializeField] private GameObject dropPrefab;
+    [SerializeField] private int minDropCount = 1;
+    [SerializeField] private int maxDropCount = 3;
+
     private Rigidbody2D rb;
     private bool isKnockedBack;
     private float originalMass;
@@ -89,6 +95,24 @@ public class HealthManager : MonoBehaviour, IDamageable
         if (currentHealth <= 0)
         {
             Debug.Log($"[HealthManager] {gameObject.name} has been defeated!");
+            
+            if (dropPrefab != null)
+            {
+                int dropCount = Random.Range(minDropCount, maxDropCount + 1);
+                for (int i = 0; i < dropCount; i++)
+                {
+                    GameObject drop = Instantiate(dropPrefab, transform.position, Quaternion.identity);
+                    Rigidbody2D dropRb = drop.GetComponent<Rigidbody2D>();
+                    if (dropRb != null)
+                    {
+                        // Give it a random scatter velocity!
+                        float scatterX = Random.Range(-4f, 4f);
+                        float scatterY = Random.Range(3f, 7f);
+                        dropRb.linearVelocity = new Vector2(scatterX, scatterY);
+                    }
+                }
+            }
+
             Destroy(gameObject);
             return;
         }

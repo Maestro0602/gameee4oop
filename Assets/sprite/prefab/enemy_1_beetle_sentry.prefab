@@ -712,3 +712,6 @@ MonoBehaviour:
   knockbackDuration: 0.7
   preventPhysicsPush: 1
   heavyMass: 10000
+  dropPrefab: {fileID: 0}
+  minDropCount: 1
+  maxDropCount: 3
