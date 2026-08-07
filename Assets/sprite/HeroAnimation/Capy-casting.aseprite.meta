@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 8f06350da5d6bbf4090db7a1efa115e9
+guid: 1c22a5b001e2a5645b472370eb709833
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects:
@@ -106,9 +106,7 @@ ScriptedImporter:
     addShadowCasters: 0
     generateIndividualEvents: 1
     generateSpriteAtlas: 1
-  importFileNodeState: 1
   platformSettingsDirtyTick: 639182018104820895
-  textureAssetName: 
   singleSpriteImportData:
   - name: 
     originalName: 
@@ -239,6 +237,5 @@ ScriptedImporter:
     androidETC2FallbackOverride: 0
   generatePhysicsShape: 0
   secondarySpriteTextures: []
-  spritePackingTag: 
-  canvasSize: {x: 64, y: 64}
   previousTextureSize: {x: 64, y: 128}
+  canvasSize: {x: 64, y: 64}

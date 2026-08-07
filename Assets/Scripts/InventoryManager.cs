@@ -97,13 +97,24 @@ public class InventoryManager : MonoBehaviour
         if (HasItem("Health Potion", 1))
         {
             // Only heal if we aren't already at max health
-            // Assuming max health is 5 for now based on PlayerData.cs
-            // You might want to add a 'maxHealth' variable to PlayerData if you haven't!
-            if (PlayerData.instance.health < 5)
+            if (PlayerData.instance.health < PlayerData.instance.maxHealth)
             {
                 RemoveItem("Health Potion", 1);
                 PlayerData.instance.AddHealth(1);
                 Debug.Log($"[Inventory] Consumed 1 Health Potion! HP is now {PlayerData.instance.health}");
+
+#if PLAYMAKER
+                // Notify the Hero's PlayMaker FSM so the UI HP Bar updates!
+                HeroController hero = FindFirstObjectByType<HeroController>();
+                if (hero != null)
+                {
+                    PlayMakerFSM[] fsms = hero.GetComponents<PlayMakerFSM>();
+                    foreach (var fsm in fsms)
+                    {
+                        fsm.SendEvent("HealPlayer");
+                    }
+                }
+#endif
                 return true; // Successfully consumed
             }
             else

@@ -87,7 +87,7 @@ namespace HutongGames.PlayMakerEditor
                 if (inspectorWindow == null)
                     inspectorWindow = EditorHacks.GetUnityInspectorWindow();
                 HighlighterHelper.Init(inspectorWindow);
-                HighlighterHelper.FromGUILayout("PlayMakerFSM_" + fsmComponent.GetInstanceID());
+                HighlighterHelper.FromGUILayout("PlayMakerFSM_" + fsmComponent.GetEntityId());
 
                 HighlighterHelper.OnGUI();
             }

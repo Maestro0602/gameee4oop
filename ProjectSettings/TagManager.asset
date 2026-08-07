@@ -8,14 +8,16 @@ TagManager:
   - HealPlayer
   - UI
   - reverse
-  - portal
+  - Hazard
+  - Enemy
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Enemy
   - Water
   - UI
+  - TOWER
   - 
   - 
   - 
@@ -40,8 +42,7 @@ TagManager:
   - 
   - 
   - 
-  - 
-  - 
+  - Player
   m_SortingLayers:
   - name: Default
     uniqueID: 0

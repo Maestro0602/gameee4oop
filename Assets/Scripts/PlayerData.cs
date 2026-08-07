@@ -10,6 +10,7 @@ public class PlayerData : MonoBehaviour
 
     [Header("Health")]
     public int health = 5;
+    public int maxHealth = 7; // Controls the maximum amount of health you can have
 
     public void TakeHealth(int amount, bool isLifeblood, bool canDie)
     {
